@@ -1,0 +1,33 @@
+# Multi-stage build for Flutter web app
+# Stage 1: Build Flutter app
+FROM ghcr.io/cirruslabs/flutter:stable AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy pubspec files first for better caching
+COPY frontend/pubspec.yaml frontend/pubspec.lock* ./
+
+# Get dependencies (this layer will be cached if pubspec.yaml doesn't change)
+RUN flutter pub get
+
+# Copy source code
+COPY frontend/ .
+
+# Build for web with optimizations
+RUN flutter build web --release
+
+# Stage 2: Serve with nginx
+FROM nginx:alpine AS production
+
+# Copy built web app
+COPY --from=builder /app/build/web /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port
+EXPOSE 3000
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

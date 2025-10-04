@@ -1,0 +1,56 @@
+# Docker Compose configuration optimized for faster builds
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: dobalito-postgres
+    environment:
+      POSTGRES_DB: dobalito
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: dobalito-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+
+  # Flutter Web (Development)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: dobalito-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  dobalito-network:
+    driver: bridge
