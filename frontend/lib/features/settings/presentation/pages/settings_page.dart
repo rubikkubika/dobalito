@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/app_provider.dart';
 
@@ -70,6 +71,15 @@ class SettingsPage extends StatelessWidget {
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
                   // Navigate to language settings
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: const Text('App Icon'),
+                subtitle: const Text('Choose your app icon'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  context.go('/icon-selector');
                 },
               ),
               const Divider(),

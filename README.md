@@ -25,6 +25,7 @@ dobalito/
 │   │       ├── profile/         # Профиль пользователя
 │   │       └── settings/       # Настройки
 │   ├── web/                     # Веб-конфигурация
+│   ├── build/                   # Собранные файлы
 │   ├── pubspec.yaml             # Flutter зависимости
 │   └── README.md                # Документация фронтенда
 ├── backend/                     # Spring Boot API
@@ -35,13 +36,37 @@ dobalito/
 │   ├── pom.xml                  # Maven зависимости
 │   ├── Dockerfile               # Backend Docker образ
 │   └── README.md                # Документация бэкенда
-├── database/                    # SQL скрипты
-├── docker-compose.yml          # Docker конфигурация
+├── docker/                      # Docker конфигурация
+│   ├── docker-compose.yml      # Основная конфигурация
+│   ├── Dockerfile.frontend      # Frontend Docker образ
+│   ├── Dockerfile.fullstack     # Fullstack Docker образ
+│   ├── nginx.conf              # Nginx конфигурация
+│   └── README.md               # Docker документация
+├── config/                      # Конфигурация
+│   ├── database/               # SQL скрипты
+│   │   └── init.sql            # Инициализация БД
+│   └── README.md               # Конфигурация документация
+├── scripts/                     # Скрипты
+│   ├── start.sh                # Запуск сервисов
+│   ├── start.bat               # Запуск сервисов (Windows)
+│   ├── stop.sh                 # Остановка сервисов
+│   ├── dev.sh                  # Разработка
+│   ├── start-simple.sh         # Простой запуск
+│   ├── generate-nginx-config.sh # Генерация nginx конфига
+│   └── railway/                # Railway скрипты
+├── deploy/                      # Деплой
+│   ├── DEPLOYMENT.md           # Подробная инструкция
+│   ├── QUICK_DEPLOY.md         # Быстрая инструкция
+│   ├── build-web.bat           # Windows сборка
+│   ├── build-web.sh            # Linux/Mac сборка
+│   └── README.md               # Деплой документация
 ├── Dockerfile.frontend         # Frontend Docker образ
 └── nginx.conf                  # Nginx конфигурация
 ```
 
 ## Быстрый старт
+
+Этот проект использует современную архитектуру с микросервисами и контейнеризацией для обеспечения быстрого развертывания и масштабируемости.
 
 ### Предварительные требования
 
@@ -88,9 +113,9 @@ dobalito/
 2. **После запуска автоматически открывается фронтенд** в браузере
 3. **Не используйте `docker-compose up` напрямую** - это медленнее и менее удобно
 
-📖 **Подробные правила разработки:** [docs/DEVELOPMENT_RULES.md](docs/DEVELOPMENT_RULES.md)  
-⚡ **Быстрый старт:** [docs/QUICK_START.md](docs/QUICK_START.md)  
-👤 **Правила для пользователя:** [docs/USER_RULES.md](docs/USER_RULES.md)
+📖 **Подробные правила разработки:** [docs/development-rules.md](docs/development-rules.md)  
+⚡ **Быстрый старт:** [docs/README.md](docs/README.md)  
+👤 **Правила для пользователя:** [docs/user-rules.md](docs/user-rules.md)
 
 ### Разработка
 

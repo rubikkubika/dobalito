@@ -1,14 +1,16 @@
-server:
+﻿server:
   port: ${PORT:8080}
 
 spring:
   application:
     name: dobalito-backend
+  profiles:
+    active: production
 
 logging:
   level:
-    com.dobalito: DEBUG
-    org.springframework.security: DEBUG
+    com.dobalito: INFO
+    org.springframework.security: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 

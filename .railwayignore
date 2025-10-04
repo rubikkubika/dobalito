@@ -1,0 +1,23 @@
+# Railway ignore file
+# Ignore development files and keep only production essentials
+
+# Development scripts
+scripts/
+
+# Documentation
+docs/
+
+# Deploy scripts
+deploy/
+
+# Local Docker files (use only docker/Dockerfile.fullstack)
+docker/docker-compose.yml
+docker/Dockerfile.frontend
+docker/Dockerfile.backend-only
+docker/nginx.conf
+
+# Keep only essential files for Railway
+# - docker/Dockerfile.fullstack (main Dockerfile)
+# - config/ (configuration files)
+# - backend/ (source code)
+# - frontend/ (source code)

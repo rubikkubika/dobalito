@@ -1,8 +1,5 @@
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS dobalito;
-
--- Use the database
-\c dobalito;
+-- Create database (PostgreSQL doesn't support IF NOT EXISTS for CREATE DATABASE)
+-- Database is already created by POSTGRES_DB environment variable
 
 -- Create a simple table for demo purposes
 CREATE TABLE IF NOT EXISTS app_info (

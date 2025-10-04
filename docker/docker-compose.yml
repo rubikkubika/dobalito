@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../config/database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - dobalito-network
     restart: unless-stopped
@@ -21,8 +21,8 @@ services:
   # Spring Boot Backend
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: backend/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
     container_name: dobalito-backend
@@ -35,8 +35,8 @@ services:
   # Flutter Web (Development)
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
       args:
         BUILDKIT_INLINE_CACHE: 1
     container_name: dobalito-frontend

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/services/api_service.dart';
 import 'core/services/storage_service.dart';
+import 'core/widgets/responsive_debug.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +43,26 @@ class DobalitoApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Wrap with gesture detector to prevent zoom
+        if (kIsWeb) {
+          return Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  // Prevent zoom on tap
+                  FocusScope.of(context).unfocus();
+                },
+                behavior: HitTestBehavior.translucent,
+                child: child,
+              ),
+              // Debug info for responsive design
+              const ResponsiveDebug(),
+            ],
+          );
+        }
+        return child!;
+      },
     );
   }
 }
