@@ -20,6 +20,9 @@ RUN flutter build web --release
 # Stage 2: Serve with nginx
 FROM nginx:alpine AS production
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 # Copy built web app
 COPY --from=builder /app/build/web /usr/share/nginx/html
 
