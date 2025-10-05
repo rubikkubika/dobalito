@@ -20,6 +20,9 @@ RUN mvn clean package -DskipTests -B
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine AS production
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 # Set working directory
 WORKDIR /app
 

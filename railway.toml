@@ -1,10 +1,10 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "docker/Dockerfile.fullstack"
-buildContext = "."
+dockerfilePath = "docker/docker-compose.yml"
+buildContext = "docker"
 
 [deploy]
-healthcheckPath = "/health"
+healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

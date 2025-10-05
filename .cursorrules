@@ -1,0 +1,40 @@
+# Cursor Rules for Dobalito Project
+
+## 🐳 Docker Files Organization (STRICT RULE)
+**ALL Docker-related files MUST be placed in the `docker/` directory**
+
+### Required Placement:
+- ✅ `docker/docker-compose.yml` - Main compose file
+- ✅ `docker/Dockerfile.frontend` - Frontend Dockerfile  
+- ✅ `docker/Dockerfile.backend` - Backend Dockerfile
+- ✅ `docker/Dockerfile.fullstack` - Full-stack Dockerfile
+- ✅ `docker/nginx.conf` - Nginx configuration
+- ✅ `docker/*.sh` - Docker scripts
+
+### Forbidden Placement:
+- ❌ `docker-compose.yml` (in root)
+- ❌ `Dockerfile` (in root)
+- ❌ `nginx.conf` (in root)
+- ❌ Any Docker files outside `docker/` directory
+
+## 📁 Project Structure Rules
+- Keep Docker configurations centralized in `docker/` folder
+- Use `docker/` as build context for Docker operations
+- Maintain consistency with existing Docker file organization
+- Reference Docker files with paths relative to `docker/` directory
+
+## 🔧 Build Context Guidelines
+When creating Docker configurations:
+- Build context: `docker/` directory
+- Dockerfile paths: `docker/Dockerfile.*`
+- Compose file paths: `docker/docker-compose.*`
+
+## 📝 File Naming Conventions
+- Docker Compose: `docker-compose.yml`, `docker-compose.*.yml`
+- Dockerfiles: `Dockerfile`, `Dockerfile.*`
+- Config files: descriptive names (`nginx.conf`, `postgres.conf`)
+
+## ⚠️ Enforcement
+- Always place new Docker files in `docker/` directory
+- Update build contexts when referencing Docker files
+- Maintain existing Docker file organization patterns
