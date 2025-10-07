@@ -6,13 +6,13 @@ FROM ghcr.io/cirruslabs/flutter:stable AS builder
 WORKDIR /app
 
 # Copy pubspec files first for better caching
-COPY frontend/pubspec.yaml frontend/pubspec.lock* ./
+COPY frontend-flutter/pubspec.yaml frontend-flutter/pubspec.lock* ./
 
 # Get dependencies (this layer will be cached if pubspec.yaml doesn't change)
 RUN flutter pub get
 
 # Copy source code
-COPY frontend/ .
+COPY frontend-flutter/ .
 
 # Build for web with optimizations
 RUN flutter build web --release

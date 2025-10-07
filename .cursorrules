@@ -38,3 +38,179 @@ When creating Docker configurations:
 - Always place new Docker files in `docker/` directory
 - Update build contexts when referencing Docker files
 - Maintain existing Docker file organization patterns
+
+## 🌐 HTTP Client Rules
+**ALWAYS use timeout with curl commands**
+
+### Required curl usage:
+- ✅ `curl.exe --max-time 10 -s http://localhost:3001` (Windows PowerShell)
+- ✅ `curl --max-time 10 -s http://localhost:3001` (Linux/Mac)
+- ✅ `curl.exe --connect-timeout 5 --max-time 10 -s http://localhost:8080/api/v1/health`
+- ❌ `curl http://localhost:3001` (no timeout)
+- ❌ `curl -s http://localhost:3001` (no timeout)
+
+### Timeout guidelines:
+- `--connect-timeout 5` - Connection timeout (5 seconds)
+- `--max-time 10` - Total timeout (10 seconds)
+- Always use `-s` for silent mode
+- Use `-f` for fail on HTTP errors when needed
+- On Windows PowerShell, use `curl.exe` instead of `curl`
+
+## 🔄 Service Restart Rules
+**ALWAYS check what's running first, then restart accordingly**
+
+### MANDATORY restart sequence (NEVER skip steps):
+1. **Check local processes**: 
+   - Windows: `tasklist | findstr java.exe` AND `tasklist | findstr node.exe`
+   - Linux/Mac: `ps aux | grep java` AND `ps aux | grep node`
+2. **Check Docker containers**: `docker-compose -f docker/docker-compose.yml ps`
+3. **Check port usage**: `netstat -ano | findstr :8080` (Windows) or `lsof -i :8080` (Linux/Mac)
+4. **Stop ALL conflicting processes**:
+   - If restarting locally: `docker-compose -f docker/docker-compose.yml down`
+   - If restarting via Docker: `taskkill /f /im java.exe` AND `taskkill /f /im node.exe`
+5. **Start services based on request**:
+   - For local restart: `Start-Process -FilePath "mvn" -ArgumentList "spring-boot:run" -WorkingDirectory "backend" -WindowStyle Hidden` (background)
+   - For Docker restart: `docker-compose -f docker/docker-compose.yml up -d`
+6. **MANDATORY verification**: 
+   - Wait 15-20 seconds for startup
+   - Test with curl: `curl.exe --max-time 10 -s http://localhost:8080/api/v1/health`
+   - Verify port is listening: `netstat -ano | findstr :8080`
+
+### Context-aware restart:
+- **"запусти бэк локально"** → Stop Docker, start locally with Maven
+- **"запусти фронт локально"** → Stop Docker, start locally with npm
+- **"перезапусти сервисы через docker"** → Stop local processes, start Docker
+- **"перезапусти сервисы"** → Check what's running, restart accordingly
+
+### CRITICAL requirements:
+- ✅ ALWAYS check BOTH Java AND Node processes
+- ✅ ALWAYS check Docker containers status
+- ✅ ALWAYS check port conflicts (8080, 3000, 3001)
+- ✅ ALWAYS stop conflicting processes BEFORE starting
+- ✅ ALWAYS wait for startup completion (15-20 seconds)
+- ✅ ALWAYS verify with curl requests
+- ✅ ALWAYS confirm port is listening
+- ❌ NEVER assume services are running without verification
+- ❌ NEVER skip process checking steps
+- ❌ NEVER start services without stopping conflicts first
+
+### Maven/Node.js specific rules:
+- **Maven commands**: Run from current directory (assumes backend/ is current)
+- **PowerShell syntax**: Use `;` instead of `&&` for command chaining
+- **Background processes**: Use `is_background: true` for long-running commands
+- **Error handling**: If Maven fails, check pom.xml and dependencies
+- **Port conflicts**: Always verify port 8080 is free before starting backend
+- **Directory assumption**: Assume current directory is backend/ when running Maven
+
+### Enforcement:
+- MANDATORY: Complete all 6 steps in sequence
+- MANDATORY: Verify service availability after each restart
+- MANDATORY: Report status clearly to user
+- MANDATORY: Follow user's explicit restart preference (local vs Docker)
+- MANDATORY: Use correct PowerShell syntax (no `&&` operators)
+- MANDATORY: Run Maven from current directory (assume backend/)
+
+## 🚀 Local Development Rules
+**ALWAYS run npm start in background to avoid blocking chat**
+
+### Required npm start usage:
+- ✅ `npm start` (with is_background: true) - Run in background
+- ✅ `Start-Job -ScriptBlock { npm start }` (PowerShell) - Background job
+- ✅ `nohup npm start > npm.log 2>&1 &` (Linux/Mac) - Background with logs
+- ❌ `npm start` (with is_background: false) - Blocks chat and terminal
+
+### Why background execution:
+- ✅ Prevents chat blocking during development
+- ✅ Allows continued interaction with assistant
+- ✅ Enables parallel command execution
+- ✅ Maintains development workflow continuity
+
+### Enforcement:
+- NEVER run npm start in foreground mode
+- ALWAYS use is_background: true for npm start commands
+- ALWAYS verify service availability after background start
+- Use Docker as preferred development environment when possible
+
+## 🌍 Internationalization Rules
+**ALWAYS update translations for both languages when modifying frontend elements**
+
+### Required i18n workflow:
+- ✅ When adding new text elements: Add translations to `LanguageContext.tsx` for both `ru` and `en`
+- ✅ When modifying existing text: Update both language versions in `LanguageContext.tsx`
+- ✅ When creating new pages: Use `useLanguage()` hook and `t()` function for all text
+- ✅ When updating UI components: Ensure all hardcoded text uses translation keys
+- ❌ Never add hardcoded Russian/English text directly in components
+- ❌ Never update only one language without updating the other
+
+### Translation key structure:
+- **Navigation**: `nav.*` (nav.home, nav.profile, nav.settings, nav.designs)
+- **Home page**: `home.*` (home.welcome, home.subtitle, home.categories, home.features)
+- **Categories**: `category.*` (category.surfing, category.bike_rental)
+- **Features**: `feature.*` (feature.create_tasks, feature.find_executors, etc.)
+- **Executors**: `executors.*` (executors.title, executors.back, executors.empty)
+- **Language selector**: `lang.*` (lang.russian, lang.english)
+
+### Required implementation pattern:
+```typescript
+// ✅ CORRECT - Using translations
+const { t } = useLanguage();
+<Typography>{t('home.welcome')}</Typography>
+
+// ❌ WRONG - Hardcoded text
+<Typography>Добро пожаловать в doBalito</Typography>
+```
+
+### LanguageContext.tsx structure:
+```typescript
+const translations = {
+  ru: {
+    'key.name': 'Russian text',
+    // ... all Russian translations
+  },
+  en: {
+    'key.name': 'English text',
+    // ... all English translations
+  },
+};
+```
+
+### Enforcement:
+- ALWAYS add new translation keys to both `ru` and `en` objects
+- ALWAYS use `t()` function instead of hardcoded text
+- ALWAYS test both language versions when making changes
+- ALWAYS maintain consistent translation key naming
+- NEVER leave incomplete translations (missing keys in one language)
+
+## 🚫 Service Auto-Start Rules
+**NEVER start services automatically without explicit user request**
+
+### Required behavior:
+- ✅ Only start services when user explicitly asks (e.g., "запусти сервисы", "start services", "перезапусти")
+- ✅ When creating new entities/features: Just create the code, don't start services
+- ✅ When adding dependencies: Just update configuration, don't restart
+- ✅ When modifying code: Just make changes, don't auto-restart
+- ❌ NEVER run `docker-compose up` or `npm start` without user request
+- ❌ NEVER restart services after code changes unless asked
+- ❌ NEVER assume user wants services running after modifications
+
+### When to start services:
+- User says: "запусти сервисы", "start services", "перезапусти"
+- User says: "запусти фронт", "start frontend"
+- User says: "запусти бэкенд", "start backend"
+- User says: "перезапусти через docker", "restart with docker"
+- User explicitly requests testing or verification
+
+### When NOT to start services:
+- After creating new entities (User, Category, etc.)
+- After adding new dependencies
+- After modifying existing code
+- After creating new controllers/services
+- After updating configuration files
+- When user just asks to "add" or "create" something
+
+### Enforcement:
+- ALWAYS ask user if they want to start services after major changes
+- ALWAYS inform user that services are ready but not started
+- ALWAYS let user decide when to start/restart services
+- NEVER assume user wants immediate service restart
+- ALWAYS respect user's development workflow preferences

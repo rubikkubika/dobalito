@@ -164,3 +164,4 @@ const handleCategoryClick = (category: Category) => {
 - Drag & drop для изменения порядка
 - Фильтрация и сортировка
 - Поиск по категориям
+

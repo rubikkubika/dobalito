@@ -1,6 +1,6 @@
 # Dobalito Backend
 
-Spring Boot REST API для Flutter приложения.
+Spring Boot REST API для React приложения.
 
 ## Технологии
 

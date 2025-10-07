@@ -1,5 +1,5 @@
 # Docker Compose configuration optimized for faster builds
-# Works both locally and on Railway with environment variables
+# Works locally with environment variables
 
 services:
   # PostgreSQL Database
@@ -52,16 +52,16 @@ services:
       timeout: 10s
       retries: 3
 
-  # Flutter Web Frontend
-  frontend:
+  # React Frontend
+  frontend-react:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.frontend
+      dockerfile: docker/Dockerfile.frontend-react
       args:
         BUILDKIT_INLINE_CACHE: 1
-    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend
+    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
     environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+      REACT_APP_API_URL: ${BACKEND_URL:-http://backend:8080}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:

@@ -14,11 +14,6 @@
 - `start-simple.sh` - Простой запуск для production
 - `generate-nginx-config.sh` - Генерация nginx конфигурации
 
-### Railway скрипты:
-- `railway/` - Скрипты для Railway deployment
-  - `deploy.sh` - Деплой на Railway
-  - `deploy.bat` - Деплой на Railway (Windows)
-  - `update-frontend.bat` - Обновление frontend
 
 ## 🚀 Использование:
 
@@ -43,14 +38,6 @@
 ./scripts/generate-nginx-config.sh
 ```
 
-### Railway деплой:
-```bash
-# Деплой на Railway
-./scripts/railway/deploy.sh
-
-# Обновление frontend
-./scripts/railway/update-frontend.bat
-```
 
 ## 🔧 Настройка:
 

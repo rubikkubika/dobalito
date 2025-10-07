@@ -21,4 +21,3 @@
 - **Netlify** - для Flutter Web (рекомендуется)
 - **GitHub Pages** - бесплатная альтернатива
 - **Heroku** - для backend
-- **Railway** - современная альтернатива

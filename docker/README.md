@@ -4,11 +4,10 @@
 
 ## 📁 Содержимое:
 
-- `docker-compose.yml` - **Универсальная** конфигурация Docker Compose (локально + Railway)
+- `docker-compose.yml` - Конфигурация Docker Compose для локальной разработки
 - `Dockerfile.frontend` - Dockerfile для Flutter frontend
 - `Dockerfile.fullstack` - Dockerfile для fullstack развертывания
 - `nginx.conf` - Конфигурация Nginx для веб-сервера
-- `railway.env` - Переменные окружения для Railway
 - `env.local.example` - Пример переменных для локальной разработки
 
 ## 🚀 Локальная разработка:
@@ -30,13 +29,6 @@ docker-compose logs -f
 docker-compose down
 ```
 
-## 🌐 Railway Deployment:
-
-### 1. Настройка переменных окружения
-Добавьте переменные из `railway.env` в настройки Railway проекта.
-
-### 2. Автоматический деплой
-Railway автоматически обнаружит `railway.toml` и использует `docker-compose.yml`.
 
 ## 🔧 Сервисы:
 
@@ -57,14 +49,6 @@ SPRING_PROFILES_ACTIVE=local
 BACKEND_URL=http://localhost:8080
 ```
 
-### Railway (`railway.env`):
-```env
-POSTGRES_DB=dobalito
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=secure_password
-SPRING_PROFILES_ACTIVE=railway
-BACKEND_URL=http://backend:8080
-```
 
 ## 🏥 Health Checks:
 

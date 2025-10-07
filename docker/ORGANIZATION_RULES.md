@@ -38,12 +38,6 @@ cd docker
 docker-compose up -d
 ```
 
-### Railway Deployment:
-```toml
-[build]
-dockerfilePath = "docker/Dockerfile.fullstack"
-buildContext = "docker"
-```
 
 ## ⚠️ Important Notes
 

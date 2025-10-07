@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS app_info (
 -- Insert sample data
 INSERT INTO app_info (name, version, description) 
 VALUES 
-    ('Dobalito', '1.0.0', 'Multi-platform Flutter application with Spring Boot backend')
+    ('Dobalito', '1.0.0', 'React web application with Spring Boot backend')
 ON CONFLICT DO NOTHING;

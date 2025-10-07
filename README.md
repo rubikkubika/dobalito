@@ -1,32 +1,28 @@
 # Dobalito
 
-Простое многоплатформенное приложение на Flutter с бэкендом на Spring Boot.
+Современное веб-приложение с React фронтендом и Spring Boot бэкендом.
 
 ## Архитектура
 
-- **Frontend**: Flutter (Android, iOS, Web)
+- **Frontend**: React + TypeScript + Material-UI (Web)
 - **Backend**: Spring Boot REST API
+- **Database**: PostgreSQL
 - **Containerization**: Docker & Docker Compose
 
 ## Структура проекта
 
 ```
 dobalito/
-├── frontend/                     # Flutter приложение
-│   ├── lib/                     # Dart код
-│   │   ├── core/                # Основные компоненты
-│   │   │   ├── config/          # Конфигурация
-│   │   │   ├── providers/       # State management
-│   │   │   ├── router/          # Навигация
-│   │   │   ├── services/        # Сервисы
-│   │   │   └── theme/           # Темы
-│   │   └── features/            # Функциональные модули
-│   │       ├── home/            # Главная страница
-│   │       ├── profile/         # Профиль пользователя
-│   │       └── settings/       # Настройки
-│   ├── web/                     # Веб-конфигурация
-│   ├── build/                   # Собранные файлы
-│   ├── pubspec.yaml             # Flutter зависимости
+├── frontend-react/               # React приложение
+│   ├── src/                     # TypeScript код
+│   │   ├── components/          # React компоненты
+│   │   ├── pages/               # Страницы приложения
+│   │   ├── services/            # API сервисы
+│   │   ├── context/             # State management
+│   │   ├── types/               # TypeScript типы
+│   │   └── utils/               # Утилиты
+│   ├── public/                  # Статические файлы
+│   ├── package.json             # React зависимости
 │   └── README.md                # Документация фронтенда
 ├── backend/                     # Spring Boot API
 │   ├── src/main/java/com/dobalito/
@@ -53,7 +49,6 @@ dobalito/
 │   ├── dev.sh                  # Разработка
 │   ├── start-simple.sh         # Простой запуск
 │   ├── generate-nginx-config.sh # Генерация nginx конфига
-│   └── railway/                # Railway скрипты
 ├── deploy/                      # Деплой
 │   ├── DEPLOYMENT.md           # Подробная инструкция
 │   ├── QUICK_DEPLOY.md         # Быстрая инструкция
@@ -71,7 +66,7 @@ dobalito/
 ### Предварительные требования
 
 - Docker и Docker Compose
-- Flutter SDK (для разработки)
+- Node.js 18+ (для разработки)
 - Java 17+ (для разработки)
 
 ### Запуск через Docker (рекомендуется)
@@ -95,15 +90,15 @@ dobalito/
    ⚠️ **НЕ ИСПОЛЬЗУЙТЕ** `docker-compose up` напрямую - это медленнее!
 
 3. **Готово!**
-   - ✅ Фронтенд автоматически откроется в браузере: http://localhost:3000
-   - ✅ Backend API доступен по адресу: http://localhost:8080/api/v1
+   - ✅ React фронтенд: http://localhost:3000
+   - ✅ Backend API: http://localhost:8080/api/v1
    - ✅ База данных PostgreSQL: localhost:5432
 
 ### ⚡ Оптимизация сборки
 
 Проект настроен для быстрой сборки с использованием:
 - **Многоэтапная сборка** - уменьшает размер финальных образов
-- **Кэширование зависимостей** - Maven и Flutter зависимости кэшируются
+- **Кэширование зависимостей** - Maven и npm зависимости кэшируются
 - **BuildKit** - ускоренная сборка Docker образов
 - **.dockerignore** - исключение ненужных файлов из контекста сборки
 
@@ -131,10 +126,10 @@ dobalito/
    ./mvnw spring-boot:run
    ```
 
-3. **Запустите Flutter приложение**
+3. **Запустите React приложение**
    ```bash
-   cd frontend
-   flutter run -d web-server --web-port 3000
+   cd frontend-react
+   npm start
    ```
 
 ## API Endpoints
@@ -171,26 +166,23 @@ JWT_SECRET=mySecretKey123456789012345678901234567890
 
 ## Разработка
 
-### Flutter
+### React
 
 ```bash
 # Переход в папку фронтенда
-cd frontend
+cd frontend-react
 
 # Установка зависимостей
-flutter pub get
+npm install
 
 # Запуск в режиме разработки
-flutter run
+npm start
 
-# Сборка для веб
-flutter build web
+# Сборка для продакшена
+npm run build
 
-# Сборка для Android
-flutter build apk
-
-# Сборка для iOS
-flutter build ios
+# Запуск тестов
+npm test
 ```
 
 ### Spring Boot
@@ -237,11 +229,12 @@ docker-compose up --build -d
 ## Технологии
 
 ### Frontend
-- Flutter 3.x
-- Provider (State Management)
-- Go Router (Navigation)
-- Dio (HTTP Client)
-- Shared Preferences (Local Storage)
+- React 18
+- TypeScript
+- Material-UI (MUI)
+- React Router
+- Axios (HTTP Client)
+- Context API (State Management)
 
 ### Backend
 - Spring Boot 3.2

@@ -64,7 +64,7 @@ docker-compose down
 
 ```
 dobalito/
-├── frontend/          # Flutter приложение
+├── frontend-react/          # React приложение
 ├── backend/           # Spring Boot API
 ├── docs/              # Документация (эта папка)
 ├── scripts/           # Скрипты запуска

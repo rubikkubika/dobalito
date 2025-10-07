@@ -24,7 +24,7 @@ public class AppController {
         return ResponseEntity.ok(Map.of(
             "name", "Dobalito",
             "version", "1.0.0",
-            "description", "Multi-platform Flutter application with Spring Boot backend",
+            "description", "React web application with Spring Boot backend",
             "platforms", new String[]{"Android", "iOS", "Web"}
         ));
     }
