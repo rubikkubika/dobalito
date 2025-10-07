@@ -34,9 +34,10 @@ dobalito/
 │   └── README.md                # Документация бэкенда
 ├── docker/                      # Docker конфигурация
 │   ├── docker-compose.yml      # Основная конфигурация
-│   ├── Dockerfile.frontend      # Frontend Docker образ
-│   ├── Dockerfile.fullstack     # Fullstack Docker образ
-│   ├── nginx.conf              # Nginx конфигурация
+│   ├── Dockerfile.frontend-react # React Frontend Docker образ
+│   ├── Dockerfile.frontend     # Flutter Frontend Docker образ
+│   ├── nginx.conf              # Nginx конфигурация для Flutter
+│   ├── nginx-react.conf        # Nginx конфигурация для React
 │   └── README.md               # Docker документация
 ├── config/                      # Конфигурация
 │   ├── database/               # SQL скрипты
@@ -48,15 +49,11 @@ dobalito/
 │   ├── stop.sh                 # Остановка сервисов
 │   ├── dev.sh                  # Разработка
 │   ├── start-simple.sh         # Простой запуск
-│   ├── generate-nginx-config.sh # Генерация nginx конфига
+│   └── generate-nginx-config.sh # Генерация nginx конфига
 ├── deploy/                      # Деплой
-│   ├── DEPLOYMENT.md           # Подробная инструкция
-│   ├── QUICK_DEPLOY.md         # Быстрая инструкция
-│   ├── build-web.bat           # Windows сборка
-│   ├── build-web.sh            # Linux/Mac сборка
+│   ├── deployment.md           # Подробная инструкция
+│   ├── quick-deploy.md         # Быстрая инструкция
 │   └── README.md               # Деплой документация
-├── Dockerfile.frontend         # Frontend Docker образ
-└── nginx.conf                  # Nginx конфигурация
 ```
 
 ## Быстрый старт
@@ -216,8 +213,16 @@ docker-compose up --build -d
 
 ## Структура базы данных
 
-### Таблица app_info
+### PostgreSQL Database
 
+**Подключение:**
+- URL: `jdbc:postgresql://localhost:5432/dobalito`
+- Username: `postgres`
+- Password: `root` (локально) / `password` (Docker)
+
+### Таблицы
+
+#### app_info
 | Поле | Тип | Описание |
 |------|-----|----------|
 | id | BIGSERIAL | Первичный ключ |
@@ -226,10 +231,33 @@ docker-compose up --build -d
 | description | TEXT | Описание |
 | created_at | TIMESTAMP | Дата создания |
 
+#### users
+| Поле | Тип | Описание |
+|------|-----|----------|
+| id | BIGSERIAL | Первичный ключ |
+| name | VARCHAR(100) | Имя пользователя |
+| email | VARCHAR(255) | Email (уникальный) |
+| avatar | VARCHAR(500) | URL аватарки |
+| created_at | TIMESTAMP | Дата создания |
+| updated_at | TIMESTAMP | Дата обновления |
+
+#### categories
+| Поле | Тип | Описание |
+|------|-----|----------|
+| id | BIGSERIAL | Первичный ключ |
+| name | VARCHAR(100) | Название категории (уникальное) |
+| english_name | VARCHAR(100) | Английское название |
+| description | VARCHAR(500) | Описание |
+| icon | VARCHAR(100) | Иконка/эмодзи |
+| color | VARCHAR(7) | Hex-код цвета |
+| is_active | BOOLEAN | Статус активности |
+| created_at | TIMESTAMP | Дата создания |
+| updated_at | TIMESTAMP | Дата обновления |
+
 ## Технологии
 
 ### Frontend
-- React 18
+- React 19.2.0
 - TypeScript
 - Material-UI (MUI)
 - React Router
@@ -237,9 +265,11 @@ docker-compose up --build -d
 - Context API (State Management)
 
 ### Backend
-- Spring Boot 3.2
+- Spring Boot 3.2.0
 - Spring Security (упрощенная конфигурация)
 - PostgreSQL Driver
+- Spring Data JPA
+- SpringDoc OpenAPI
 
 ### DevOps
 - Docker

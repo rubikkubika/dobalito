@@ -115,11 +115,11 @@ GET    /swagger-ui.html   # Swagger UI интерфейс
 
 ## 🗄️ База данных
 
-### H2 In-Memory Database
-- **URL:** `jdbc:h2:mem:testdb`
-- **Username:** `sa`
-- **Password:** `password`
-- **Console:** `http://localhost:8080/h2-console`
+### PostgreSQL Database
+- **URL:** `jdbc:postgresql://localhost:5432/dobalito`
+- **Username:** `postgres`
+- **Password:** `root` (локально) / `password` (Docker)
+- **Host:** `localhost` (локально) / `postgres` (Docker)
 
 ### Таблицы
 
@@ -158,20 +158,18 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
-  
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5432/dobalito
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: root
   
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   
   servlet:
     multipart:
@@ -192,7 +190,7 @@ springdoc:
 - **Spring Data JPA** - Работа с базой данных
 - **Spring Security** - Безопасность
 - **Spring Web** - REST API
-- **H2 Database** - In-memory база данных
+- **PostgreSQL** - База данных
 
 ### Дополнительные
 - **Spring Boot Validation** - Валидация данных

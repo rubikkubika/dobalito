@@ -113,11 +113,11 @@ curl "http://localhost:8080/api/v1/users/search?q=Иван"
 ```
 
 ## База данных
-- Используется H2 in-memory база данных
-- Консоль H2 доступна по адресу: http://localhost:8080/h2-console
-- JDBC URL: `jdbc:h2:mem:testdb`
-- Username: `sa`
-- Password: `password`
+- Используется PostgreSQL база данных
+- Подключение: `jdbc:postgresql://localhost:5432/dobalito`
+- Username: `postgres`
+- Password: `root` (локально) / `password` (Docker)
+- Host: `localhost` (локально) / `postgres` (Docker)
 
 ## Тестовые данные
 При запуске приложения автоматически создаются 5 тестовых пользователей:

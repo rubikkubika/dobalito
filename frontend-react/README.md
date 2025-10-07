@@ -4,7 +4,7 @@ React фронтенд для приложения Dobalito с использо�
 
 ## Технологии
 
-- **React 18** - Основной фреймворк
+- **React 19.2.0** - Основной фреймворк
 - **TypeScript** - Типизация
 - **Material-UI (MUI)** - UI компоненты
 - **React Router** - Маршрутизация
@@ -88,6 +88,9 @@ docker build -f docker/Dockerfile.frontend-react -t dobalito-react .
 
 # Запуск контейнера
 docker run -p 3000:3000 dobalito-react
+
+# Или через docker-compose (рекомендуется)
+docker-compose -f docker/docker-compose.yml up frontend-react
 ```
 
 ## Особенности

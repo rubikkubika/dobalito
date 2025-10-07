@@ -4,11 +4,13 @@ Spring Boot REST API для React приложения.
 
 ## Технологии
 
-- **Spring Boot 3.x** - Java фреймворк
+- **Spring Boot 3.2.0** - Java фреймворк
 - **Spring Security** - безопасность
 - **Spring Web** - REST API
+- **Spring Data JPA** - работа с базой данных
 - **Maven** - управление зависимостями
 - **PostgreSQL** - база данных
+- **SpringDoc OpenAPI** - API документация
 - **Docker** - контейнеризация
 
 ## Структура проекта
@@ -73,6 +75,28 @@ server:
 spring:
   application:
     name: dobalito-backend
+  
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dobalito
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: root
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 ```
 
 ## Особенности

@@ -6,8 +6,9 @@
 
 - `docker-compose.yml` - Конфигурация Docker Compose для локальной разработки
 - `Dockerfile.frontend` - Dockerfile для Flutter frontend
-- `Dockerfile.fullstack` - Dockerfile для fullstack развертывания
-- `nginx.conf` - Конфигурация Nginx для веб-сервера
+- `Dockerfile.frontend-react` - Dockerfile для React frontend
+- `nginx.conf` - Конфигурация Nginx для Flutter веб-сервера
+- `nginx-react.conf` - Конфигурация Nginx для React веб-сервера
 - `env.local.example` - Пример переменных для локальной разработки
 
 ## 🚀 Локальная разработка:
@@ -34,7 +35,7 @@ docker-compose down
 
 - **postgres** - PostgreSQL база данных (порт 5432)
 - **backend** - Spring Boot API (порт 8080)
-- **frontend** - Flutter Web приложение (порт 3000)
+- **frontend-react** - React Web приложение (порт 3000)
 
 ## 📝 Переменные окружения:
 
@@ -54,5 +55,5 @@ BACKEND_URL=http://localhost:8080
 
 Все сервисы имеют настроенные health checks:
 - **Backend**: `http://localhost:8080/api/v1/health`
-- **Frontend**: `http://localhost:3000`
+- **Frontend-React**: `http://localhost:3000`
 - **Database**: Автоматическая проверка через pg_isready
