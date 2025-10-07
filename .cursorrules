@@ -69,7 +69,7 @@ When creating Docker configurations:
    - If restarting locally: `docker-compose -f docker/docker-compose.yml down`
    - If restarting via Docker: `taskkill /f /im java.exe` AND `taskkill /f /im node.exe`
 5. **Start services based on request**:
-   - For local restart: `Start-Process -FilePath "mvn" -ArgumentList "spring-boot:run" -WorkingDirectory "backend" -WindowStyle Hidden` (background)
+   - For local backend restart: Create local DB + `cd backend; $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/dobalito"; $env:SPRING_DATASOURCE_USERNAME="postgres"; $env:SPRING_DATASOURCE_PASSWORD="root"; mvn spring-boot:run`
    - For Docker restart: `docker-compose -f docker/docker-compose.yml up -d`
 6. **MANDATORY verification**: 
    - Wait 15-20 seconds for startup
@@ -77,10 +77,35 @@ When creating Docker configurations:
    - Verify port is listening: `netstat -ano | findstr :8080`
 
 ### Context-aware restart:
-- **"запусти бэк локально"** → Stop Docker, start locally with Maven
+- **"запусти бэк локально"** → Stop Docker, start locally with Maven + local DB
 - **"запусти фронт локально"** → Stop Docker, start locally with npm
 - **"перезапусти сервисы через docker"** → Stop local processes, start Docker
 - **"перезапусти сервисы"** → Check what's running, restart accordingly
+
+## 🏠 Local Backend Database Rules
+**When user requests "запустить бэк локально" or "запустить бэкенд локально":**
+
+### MANDATORY local database setup:
+1. **ALWAYS use local PostgreSQL database `dobalito`**
+2. **Connection string**: `jdbc:postgresql://localhost:5432/dobalito`
+3. **Credentials**: username=`postgres`, password=`root`
+4. **Create database if not exists**:
+   ```bash
+   $env:PGPASSWORD="root"; & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -c "CREATE DATABASE dobalito;"
+   ```
+5. **Start backend with local DB**:
+   ```bash
+   cd backend; $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/dobalito"; $env:SPRING_DATASOURCE_USERNAME="postgres"; $env:SPRING_DATASOURCE_PASSWORD="root"; mvn spring-boot:run
+   ```
+
+### CRITICAL requirements:
+- ✅ ALWAYS create `dobalito` database if it doesn't exist
+- ✅ ALWAYS use local PostgreSQL (not Docker database)
+- ✅ ALWAYS set environment variables for local DB connection
+- ✅ ALWAYS run Maven from backend directory
+- ✅ ALWAYS verify local database connection before starting
+- ❌ NEVER use Docker database for local backend runs
+- ❌ NEVER assume database exists without checking/creating
 
 ### CRITICAL requirements:
 - ✅ ALWAYS check BOTH Java AND Node processes

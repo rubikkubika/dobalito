@@ -2,6 +2,22 @@
 
 ## 🚀 Обязательные правила запуска
 
+### 🏠 Локальный запуск бэкенда
+
+**При запросе "запустить бэк локально" или "запустить бэкенд локально":**
+
+1. **Автоматически использовать локальную базу данных `dobalito`**
+2. **Подключение**: `jdbc:postgresql://localhost:5432/dobalito`
+3. **Логин**: `postgres`, **Пароль**: `root`
+4. **Создать базу данных если не существует**:
+   ```bash
+   $env:PGPASSWORD="root"; & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -c "CREATE DATABASE dobalito;"
+   ```
+5. **Запуск через Maven**:
+   ```bash
+   cd backend; $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/dobalito"; $env:SPRING_DATASOURCE_USERNAME="postgres"; $env:SPRING_DATASOURCE_PASSWORD="root"; mvn spring-boot:run
+   ```
+
 ### ✅ ПРАВИЛЬНО - Используйте быстрый запуск:
 
 **Windows:**

@@ -1,6 +1,11 @@
 -- Create database (PostgreSQL doesn't support IF NOT EXISTS for CREATE DATABASE)
 -- Database is already created by POSTGRES_DB environment variable
 
+-- Create database if it doesn't exist
+-- Note: This script runs in the postgres database, so we need to create dobalito database
+SELECT 'CREATE DATABASE dobalito'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dobalito')\gexec
+
 -- Create a simple table for demo purposes
 CREATE TABLE IF NOT EXISTS app_info (
     id BIGSERIAL PRIMARY KEY,

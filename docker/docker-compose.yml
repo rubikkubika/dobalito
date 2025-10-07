@@ -33,10 +33,9 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-dobalito}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       SERVER_PORT: ${BACKEND_PORT:-8080}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
@@ -46,11 +45,6 @@ services:
     networks:
       - dobalito-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # React Frontend
   frontend-react:
@@ -65,8 +59,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - dobalito-network
     restart: unless-stopped
