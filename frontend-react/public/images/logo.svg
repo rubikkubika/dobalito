@@ -1,0 +1,90 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sandy Island - irregular mound shape -->
+  <path
+    d="M10 80 Q20 70 30 75 Q40 80 50 75 Q60 70 70 75 Q80 70 90 80 L90 90 L10 90 Z"
+    fill="#F4C76B"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  
+  <!-- Sand texture dots -->
+  <circle cx="20" cy="82" r="0.8" fill="#D4A574" />
+  <circle cx="30" cy="80" r="0.6" fill="#D4A574" />
+  <circle cx="40" cy="83" r="0.9" fill="#D4A574" />
+  <circle cx="50" cy="81" r="0.7" fill="#D4A574" />
+  <circle cx="60" cy="82" r="0.8" fill="#D4A574" />
+  <circle cx="70" cy="80" r="0.6" fill="#D4A574" />
+  <circle cx="80" cy="83" r="0.7" fill="#D4A574" />
+  
+  <!-- Palm Tree Trunk - curved and thick -->
+  <path
+    d="M25 80 Q27 65 30 50 Q32 35 35 30"
+    fill="#8D6E63"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  
+  <!-- Palm Tree Trunk texture lines -->
+  <line x1="26" y1="75" x2="28" y2="75" stroke="#6D4C41" stroke-width="0.8" />
+  <line x1="27" y1="65" x2="29" y2="65" stroke="#6D4C41" stroke-width="0.8" />
+  <line x1="28" y1="55" x2="30" y2="55" stroke="#6D4C41" stroke-width="0.8" />
+  <line x1="29" y1="45" x2="31" y2="45" stroke="#6D4C41" stroke-width="0.8" />
+  
+  <!-- Palm Fronds - 6 lush fronds fanning out -->
+  <path
+    d="M35 30 Q20 20 15 25 Q20 23 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  <path
+    d="M35 30 Q25 15 20 20 Q25 18 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  <path
+    d="M35 30 Q35 10 35 15 Q35 13 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  <path
+    d="M35 30 Q45 15 50 20 Q45 18 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  <path
+    d="M35 30 Q50 20 55 25 Q50 23 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  <path
+    d="M35 30 Q30 5 25 10 Q30 8 35 30"
+    fill="#4CAF50"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+  />
+  
+  <!-- Surfboard - vertical, leaning right -->
+  <path
+    d="M75 80 L78 30 L82 35 L82 85 L78 90 Z"
+    fill="#FF9800"
+    stroke="#2E7D32"
+    stroke-width="1.5"
+    transform="rotate(12 80 60)"
+  />
+  
+  <!-- Surfboard center stripe -->
+  <path
+    d="M77 80 L79 30 L80 35 L80 85 L79 90 Z"
+    fill="#FFB74D"
+    transform="rotate(12 80 60)"
+  />
+  
+  <!-- Surfboard details -->
+  <line x1="78" y1="40" x2="78" y2="80" stroke="#FFB74D" stroke-width="0.5" transform="rotate(12 80 60)" />
+  <line x1="78" y1="50" x2="78" y2="70" stroke="#FFB74D" stroke-width="0.5" transform="rotate(12 80 60)" />
+</svg>
