@@ -54,6 +54,20 @@ const translations = {
     'executors.empty': 'Список исполнителей пуст',
     'executors.empty_desc': 'В данной категории пока нет исполнителей',
     
+    // Login
+    'login.title': 'Вход в систему',
+    'login.subtitle': 'Введите свои данные для входа',
+    'login.email': 'Email',
+    'login.password': 'Пароль',
+    'login.submit': 'Войти',
+    'login.cancel': 'Отмена',
+    'login.email_required': 'Email обязателен',
+    'login.email_invalid': 'Неверный формат email',
+    'login.password_required': 'Пароль обязателен',
+    'login.password_min_length': 'Пароль должен содержать минимум 6 символов',
+    'login.success': 'Успешный вход!',
+    'login.error': 'Ошибка входа. Проверьте данные.',
+    
     // Language selector
     'lang.russian': 'Русский',
     'lang.english': 'English',
@@ -100,6 +114,20 @@ const translations = {
     'executors.empty': 'Executors list is empty',
     'executors.empty_desc': 'There are no executors in this category yet',
     
+    // Login
+    'login.title': 'Login',
+    'login.subtitle': 'Enter your credentials to login',
+    'login.email': 'Email',
+    'login.password': 'Password',
+    'login.submit': 'Login',
+    'login.cancel': 'Cancel',
+    'login.email_required': 'Email is required',
+    'login.email_invalid': 'Invalid email format',
+    'login.password_required': 'Password is required',
+    'login.password_min_length': 'Password must be at least 6 characters',
+    'login.success': 'Login successful!',
+    'login.error': 'Login error. Please check your credentials.',
+    
     // Language selector
     'lang.russian': 'Русский',
     'lang.english': 'English',
@@ -145,6 +173,20 @@ const translations = {
     'executors.back': 'Kembali',
     'executors.empty': 'Daftar eksekutor kosong',
     'executors.empty_desc': 'Belum ada eksekutor dalam kategori ini',
+    
+    // Login
+    'login.title': 'Masuk',
+    'login.subtitle': 'Masukkan kredensial Anda untuk masuk',
+    'login.email': 'Email',
+    'login.password': 'Kata Sandi',
+    'login.submit': 'Masuk',
+    'login.cancel': 'Batal',
+    'login.email_required': 'Email diperlukan',
+    'login.email_invalid': 'Format email tidak valid',
+    'login.password_required': 'Kata sandi diperlukan',
+    'login.password_min_length': 'Kata sandi minimal 6 karakter',
+    'login.success': 'Berhasil masuk!',
+    'login.error': 'Error masuk. Periksa kredensial Anda.',
     
     // Language selector
     'lang.russian': 'Русский',

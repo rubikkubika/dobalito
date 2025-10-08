@@ -9,21 +9,16 @@ import {
   TextField,
   InputAdornment,
   Button,
-  Drawer,
-  List,
-  MenuItem,
-  ListItemText,
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DobalitoLogo from './DobalitoLogo';
 import LanguageSelector from './LanguageSelector';
 import BottomNavigation from './BottomNavigation';
 import { useLanguage } from '../context/LanguageContext';
-import { useCategories } from '../hooks/useCategories';
+import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -33,20 +28,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language } = useLanguage();
-  const [burgerAnchorEl, setBurgerAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const getBackendLanguage = () => {
-    return language === 'ru' ? 'ru' : 'en';
-  };
-  
-  const { categories, loading: categoriesLoading } = useCategories(true, getBackendLanguage());
 
-  const handleBurgerClick = (event: React.MouseEvent<HTMLElement>) => {
-    setBurgerAnchorEl(event.currentTarget);
+  const handleLoginClick = () => {
+    navigate('/login');
   };
 
-  const handleBurgerClose = () => {
-    setBurgerAnchorEl(null);
+  const handleLogout = () => {
+    logout();
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,23 +105,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             overflow: 'hidden',
             justifyContent: 'space-between'
           }}>
-            {/* Burger Menu Button */}
-            <IconButton
-              onClick={handleBurgerClick}
-              sx={{
-                width: { xs: 35, sm: 40 },
-                height: { xs: 35, sm: 40 },
-                backgroundColor: '#F5F5F5',
-                borderRadius: '8px',
-                marginRight: 1,
-                '&:hover': {
-                  backgroundColor: '#EEEEEE',
-                },
-              }}
-            >
-              <MenuIcon sx={{ fontSize: { xs: 16, sm: 20 }, color: '#757575' }} />
-            </IconButton>
-
             {/* Left side - Logo */}
             <Box 
               onClick={handleLogoClick}
@@ -236,26 +209,67 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <LanguageSelector />
 
               {/* Login/Register Button */}
-              <Button
-                variant="outlined"
-                sx={{
-                  borderRadius: '20px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: { xs: '12px', sm: '14px' },
-                  px: { xs: 1.5, sm: 2 },
-                  py: 0.5,
-                  borderColor: '#4CAF50',
-                  color: '#4CAF50',
-                  '&:hover': {
-                    backgroundColor: '#4CAF50',
-                    color: '#FFFFFF',
+              {!isAuthenticated ? (
+                <Button
+                  variant="outlined"
+                  onClick={handleLoginClick}
+                  sx={{
+                    borderRadius: '20px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: { xs: '12px', sm: '14px' },
+                    px: { xs: 1.5, sm: 2 },
+                    py: 0.5,
                     borderColor: '#4CAF50',
-                  },
-                }}
-              >
-                {t('nav.login_register')}
-              </Button>
+                    color: '#4CAF50',
+                    '&:hover': {
+                      backgroundColor: '#4CAF50',
+                      color: '#FFFFFF',
+                      borderColor: '#4CAF50',
+                    },
+                  }}
+                >
+                  {t('nav.login_register')}
+                </Button>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: '#4CAF50', 
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }}
+                    onClick={() => navigate('/profile')}
+                  >
+                    {user?.name}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={handleLogout}
+                    sx={{
+                      borderRadius: '20px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: { xs: '12px', sm: '14px' },
+                      px: { xs: 1.5, sm: 2 },
+                      py: 0.5,
+                      borderColor: '#f44336',
+                      color: '#f44336',
+                      '&:hover': {
+                        backgroundColor: '#f44336',
+                        color: '#FFFFFF',
+                        borderColor: '#f44336',
+                      },
+                    }}
+                  >
+                    Выйти
+                  </Button>
+                </Box>
+              )}
 
               {/* For Executors Button */}
               <Button
@@ -338,52 +352,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Box>
         </Toolbar>
       </AppBar>
-
-      {/* Sidebar with Categories */}
-      <Drawer
-        anchor="left"
-        open={Boolean(burgerAnchorEl)}
-        onClose={handleBurgerClose}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: 280,
-            paddingTop: 2,
-            paddingBottom: 2,
-          },
-        }}
-      >
-        <Box sx={{ padding: 2 }}>
-          <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 600 }}>
-            {t('home.categories')}
-          </Typography>
-          
-          {categoriesLoading ? (
-            <Typography>Загрузка...</Typography>
-          ) : (
-            <List>
-              {categories.map((category) => (
-                <MenuItem
-                  key={category.id}
-                  onClick={() => {
-                    handleBurgerClose();
-                    // TODO: Navigate to category page or filter by category
-                    console.log('Selected category:', category.name);
-                  }}
-                  sx={{
-                    borderRadius: 1,
-                    marginBottom: 0.5,
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5',
-                    },
-                  }}
-                >
-                  <ListItemText primary={category.name} />
-                </MenuItem>
-              ))}
-            </List>
-          )}
-        </Box>
-      </Drawer>
 
       {/* Main Content */}
       <Box

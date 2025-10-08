@@ -156,10 +156,10 @@ const ExecutorsPage: React.FC = () => {
                 {t('executors.back')}
               </Button>
               <Typography
-                variant="h4"
+                variant="h5"
                 component="h1"
                 sx={{
-                  fontSize: getResponsiveValue('1.5rem', '2rem', '2.5rem'),
+                  fontSize: getResponsiveValue('1.2rem', '1.5rem', '1.8rem'),
                   fontWeight: 600,
                   color: '#000000',
                 }}

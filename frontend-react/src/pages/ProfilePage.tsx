@@ -1,5 +1,5 @@
 // Profile page component
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
@@ -10,170 +10,273 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  Divider,
+  Chip,
+  Grid,
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
-import { useApp } from '../context/AppContext';
-import { apiService } from '../services/apiService';
+import { Edit as EditIcon, Email as EmailIcon, Person as PersonIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useCategories } from '../hooks/useCategories';
+import CategoryList from '../components/CategoryList';
 import { getResponsiveValue } from '../utils/helpers';
+import { Category } from '../types';
 
 const ProfilePage: React.FC = () => {
-  const { state, dispatch } = useApp();
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [formData, setFormData] = React.useState({
-    name: '',
-    email: '',
+  const { user } = useAuth();
+  const { t, language } = useLanguage();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      try {
-        const userProfile = await apiService.getUserProfile();
-        dispatch({ type: 'SET_USER', payload: userProfile });
-        setFormData({
-          name: userProfile.name,
-          email: userProfile.email,
-        });
-      } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: 'Ошибка загрузки профиля' });
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    };
+  const getBackendLanguage = () => {
+    return language === 'ru' ? 'ru' : 'en';
+  };
+  
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories(true, getBackendLanguage());
 
-    fetchProfile();
-  }, [dispatch]);
+  const handleCategoryClick = (category: Category) => {
+    navigate(`/executors/${category.name}`);
+  };
 
   const handleSave = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      await apiService.updateUserProfile(formData);
-      dispatch({ type: 'SET_USER', payload: { ...state.user!, ...formData } });
+      // Здесь будет реальный API вызов для обновления профиля
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsEditing(false);
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Ошибка обновления профиля' });
+    } catch (err) {
+      setError('Ошибка при сохранении профиля');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    if (state.user) {
-      setFormData({
-        name: state.user.name,
-        email: state.user.email,
-      });
-    }
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+    });
     setIsEditing(false);
+    setError(null);
   };
 
-  if (state.isLoading) {
+  if (!user) {
     return (
-      <Container maxWidth="md" sx={{ px: 0 }}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="50vh"
-        >
-          <CircularProgress />
-        </Box>
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error">Пользователь не найден</Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ px: 0 }}>
-      {state.error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {state.error}
-        </Alert>
-      )}
+    <Container maxWidth="lg" sx={{ px: 0, pt: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: { xs: 2, sm: 3 }, 
+        alignItems: 'flex-start',
+        flexDirection: { xs: 'column', md: 'row' }
+      }}>
+        {/* Categories Sidebar */}
+        <Box sx={{ 
+          minWidth: { xs: '100%', md: 250 }, 
+          width: { xs: '100%', md: 'auto' },
+          backgroundColor: '#FFFFFF', 
+          borderRadius: '16px', 
+          border: '1px solid #E0E0E0',
+          p: 2,
+          order: { xs: 2, md: 1 }
+        }}>
+          <CategoryList
+            categories={categories}
+            loading={categoriesLoading}
+            error={categoriesError}
+            onCategoryClick={handleCategoryClick}
+            title={t('home.categories')}
+          />
+        </Box>
 
-      <Typography
-        variant="h4"
-        component="h1"
-        gutterBottom
-        sx={{
-          fontSize: getResponsiveValue('1.5rem', '1.8rem', '2rem'),
-          fontWeight: 600,
-          textAlign: 'center',
-          mb: 4,
-        }}
-      >
-        Профиль пользователя
-      </Typography>
-
-      <Paper elevation={3} sx={{ p: getResponsiveValue(3, 4, 5) }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 4, alignItems: 'center' }}>
-          <Box sx={{ textAlign: 'center', flex: { xs: 'none', sm: '0 0 300px' } }}>
-            <Avatar
-              src={state.user?.avatar}
+        {/* Main Content */}
+        <Box sx={{ 
+          flex: 1, 
+          order: { xs: 1, md: 2 },
+          width: { xs: '100%', md: 'auto' }
+        }}>
+          <Paper
+            elevation={3}
+            sx={{
+              padding: 4,
+              borderRadius: 2,
+              backgroundColor: '#ffffff',
+            }}
+          >
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Avatar
+            src={user.avatar}
+            sx={{
+              width: 80,
+              height: 80,
+              mr: 3,
+              fontSize: '2rem',
+              backgroundColor: '#4CAF50',
+            }}
+          >
+            {user.name.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
               sx={{
-                width: getResponsiveValue(100, 120, 150),
-                height: getResponsiveValue(100, 120, 150),
-                mx: 'auto',
-                mb: 2,
+                fontWeight: 600,
+                fontSize: getResponsiveValue('1.5rem', '2rem', '2.5rem'),
+                color: '#2E7D32',
+                mb: 1,
               }}
-            />
-            <Typography variant="h6" gutterBottom>
-              {state.user?.name}
+            >
+              {user.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Участник с {state.user?.memberSince}
+            <Typography variant="body1" color="text.secondary">
+              ID: {user.id}
             </Typography>
-          </Box>
-
-          <Box sx={{ flex: 1 }}>
-            {isEditing ? (
-              <Box>
-                <TextField
-                  fullWidth
-                  label="Имя"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  margin="normal"
-                />
-                <TextField
-                  fullWidth
-                  label="Email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  margin="normal"
-                />
-                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                  <Button variant="contained" onClick={handleSave}>
-                    Сохранить
-                  </Button>
-                  <Button variant="outlined" onClick={handleCancel}>
-                    Отмена
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Информация о профиле
-                </Typography>
-                <Typography variant="body1" paragraph>
-                  <strong>Имя:</strong> {state.user?.name}
-                </Typography>
-                <Typography variant="body1" paragraph>
-                  <strong>Email:</strong> {state.user?.email}
-                </Typography>
-                <Typography variant="body1" paragraph>
-                  <strong>ID:</strong> {state.user?.id}
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<EditIcon />}
-                  onClick={() => setIsEditing(true)}
-                  sx={{ mt: 2 }}
-                >
-                  Редактировать профиль
-                </Button>
-              </Box>
-            )}
           </Box>
         </Box>
-      </Paper>
+
+        <Divider sx={{ mb: 3 }} />
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Информация о профиле
+          </Typography>
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <PersonIcon color="primary" />
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Имя
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                ) : (
+                  <Typography variant="body1">{user.name}</Typography>
+                )}
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <EmailIcon color="primary" />
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Email
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    fullWidth
+                    size="small"
+                    type="email"
+                  />
+                ) : (
+                  <Typography variant="body1">{user.email}</Typography>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Категории пользователя */}
+        {user.categories && user.categories.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Мои категории
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {user.categories.map((category) => (
+                <Chip
+                  key={category.id}
+                  label={category.name}
+                  sx={{
+                    backgroundColor: category.color || '#4CAF50',
+                    color: '#ffffff',
+                    fontWeight: 500,
+                    '&:hover': {
+                      backgroundColor: category.color || '#45a049',
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          {isEditing ? (
+            <>
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                Отмена
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleSave}
+                disabled={loading}
+                sx={{
+                  backgroundColor: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: '#45a049'
+                  }
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  'Сохранить'
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => setIsEditing(true)}
+              sx={{
+                backgroundColor: '#4CAF50',
+                '&:hover': {
+                  backgroundColor: '#45a049'
+                }
+              }}
+            >
+              Редактировать профиль
+            </Button>
+          )}
+        </Box>
+          </Paper>
+        </Box>
+      </Box>
     </Container>
   );
 };

@@ -121,6 +121,40 @@ export const apiService = {
     const response = await api.get(`/users/by-category/${categoryId}`);
     return response.data;
   },
+
+  // Authentication
+  async login(email: string, password: string) {
+    const response = await api.post('/auth/login', {
+      email,
+      password
+    });
+    return response.data;
+  },
+
+  async register(email: string, password: string, name: string) {
+    const response = await api.post('/auth/register', {
+      email,
+      password,
+      name
+    });
+    return response.data;
+  },
+
+  async logout() {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  },
+
+  async getCurrentUser() {
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+
+  // User categories
+  async getUserCategories(userId: number) {
+    const response = await api.get(`/users/${userId}/categories`);
+    return response.data;
+  },
 };
 
 export default api;

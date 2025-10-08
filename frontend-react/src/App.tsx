@@ -4,12 +4,15 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AppProvider } from './context/AppContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import DesignsPage from './pages/DesignsPage';
 import ExecutorsPage from './pages/ExecutorsPage';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Create theme with green colors matching doBalito design
 const theme = createTheme({
@@ -117,20 +120,31 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LanguageProvider>
-        <AppProvider>
-          <Router>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Navigate to="/home" replace />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/executors/:category" element={<ExecutorsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/designs" element={<DesignsPage />} />
-              </Routes>
-            </Layout>
-          </Router>
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <Router>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/executors/:category" element={<ExecutorsPage />} />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/designs" element={<DesignsPage />} />
+                </Routes>
+              </Layout>
+            </Router>
+          </AppProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
