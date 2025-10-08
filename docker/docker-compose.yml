@@ -31,6 +31,7 @@ services:
       dockerfile: backend/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
+    image: dobalito-backend
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -53,6 +54,7 @@ services:
       dockerfile: docker/Dockerfile.frontend-react
       args:
         BUILDKIT_INLINE_CACHE: 1
+    image: dobalito-frontend
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
     environment:
       REACT_APP_API_URL: ${BACKEND_URL:-http://backend:8080}
