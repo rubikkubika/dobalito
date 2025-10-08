@@ -19,6 +19,9 @@ const translations = {
     'nav.profile': 'Профиль',
     'nav.settings': 'Настройки',
     'nav.designs': 'Дизайны',
+    'nav.login_register': 'Вход/Регистрация',
+    'nav.for_executors': 'Для исполнителей',
+    'nav.search': 'Поиск',
     
     // Home page
     'home.welcome': 'Добро пожаловать в doBalito',
@@ -62,6 +65,9 @@ const translations = {
     'nav.profile': 'Profile',
     'nav.settings': 'Settings',
     'nav.designs': 'Designs',
+    'nav.login_register': 'Login/Register',
+    'nav.for_executors': 'For Executors',
+    'nav.search': 'Search',
     
     // Home page
     'home.welcome': 'Welcome to doBalito',
@@ -105,6 +111,9 @@ const translations = {
     'nav.profile': 'Profil',
     'nav.settings': 'Pengaturan',
     'nav.designs': 'Desain',
+    'nav.login_register': 'Masuk/Daftar',
+    'nav.for_executors': 'Untuk Eksekutor',
+    'nav.search': 'Cari',
     
     // Home page
     'home.welcome': 'Selamat datang di doBalito',

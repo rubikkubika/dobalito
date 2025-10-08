@@ -4,7 +4,6 @@ import {
   Container,
   Typography,
   Box,
-  Paper,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -45,12 +44,7 @@ const HomePage: React.FC = () => {
       dispatch({ type: 'SET_LOADING', payload: true });
       
       try {
-        const [appInfo, userProfile] = await Promise.all([
-          apiService.getAppInfo(),
-          apiService.getUserProfile(),
-        ]);
-        
-        dispatch({ type: 'SET_APP_INFO', payload: appInfo });
+        const userProfile = await apiService.getUserProfile();
         dispatch({ type: 'SET_USER', payload: userProfile });
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -234,28 +228,6 @@ const HomePage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* App Info */}
-      {state.appInfo && (
-        <Paper
-          elevation={1}
-          sx={{
-            p: 3,
-            mt: 4,
-            textAlign: 'center',
-            backgroundColor: 'grey.50',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Информация о приложении
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {state.appInfo.description}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Версия: {state.appInfo.version} | Платформы: {state.appInfo.platforms.join(', ')}
-          </Typography>
-        </Paper>
-      )}
     </Container>
   );
 };

@@ -9,27 +9,19 @@ import {
   TextField,
   InputAdornment,
   Button,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Drawer,
   List,
-  Divider,
+  MenuItem,
+  ListItemText,
 } from '@mui/material';
 import {
-  NotificationsOutlined as NotificationsIcon,
-  HelpOutline as HelpIcon,
-  PersonOutline as PersonIcon,
-  DesignServices as DesignIcon,
-  SettingsOutlined as SettingsIcon,
-  Logout as LogoutIcon,
   Search as SearchIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DobalitoLogo from './DobalitoLogo';
 import LanguageSelector from './LanguageSelector';
+import BottomNavigation from './BottomNavigation';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../hooks/useCategories';
 
@@ -41,7 +33,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language } = useLanguage();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [burgerAnchorEl, setBurgerAnchorEl] = React.useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const getBackendLanguage = () => {
@@ -49,14 +40,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
   
   const { categories, loading: categoriesLoading } = useCategories(true, getBackendLanguage());
-
-  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleBurgerClick = (event: React.MouseEvent<HTMLElement>) => {
     setBurgerAnchorEl(event.currentTarget);
@@ -84,23 +67,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
 
-  const handleMenuAction = (action: string) => {
-    handleProfileClose();
-    switch (action) {
-      case 'profile':
-        navigate('/profile');
-        break;
-      case 'designs':
-        navigate('/designs');
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      case 'logout':
-        // Handle logout
-        break;
-    }
-  };
 
 
 
@@ -112,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       maxWidth: '100vw',
       overflowX: 'hidden'
     }}>
-      {/* Top Bar - Airbnb style */}
+      {/* Top Bar - Desktop */}
       <AppBar
         position="fixed"
         sx={{
@@ -127,6 +93,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           width: '100%',
           maxWidth: '100vw',
           position: 'fixed', // Explicitly set position
+          display: { xs: 'none', sm: 'block' }, // Hide on mobile
         }}
       >
         <Toolbar sx={{ 
@@ -268,112 +235,109 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Language Selector */}
               <LanguageSelector />
 
-              {/* Notifications - Hidden on mobile */}
-              <IconButton
+              {/* Login/Register Button */}
+              <Button
+                variant="outlined"
                 sx={{
-                  width: { xs: 35, sm: 40 },
-                  height: { xs: 35, sm: 40 },
-                  backgroundColor: '#F5F5F5',
                   borderRadius: '20px',
-                  display: { xs: 'none', sm: 'flex' },
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: { xs: '12px', sm: '14px' },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  borderColor: '#4CAF50',
+                  color: '#4CAF50',
                   '&:hover': {
-                    backgroundColor: '#EEEEEE',
-                  },
-                }}
-              >
-                <NotificationsIcon sx={{ fontSize: { xs: 16, sm: 20 }, color: '#757575' }} />
-              </IconButton>
-
-              {/* Help - Hidden on mobile */}
-              <IconButton
-                sx={{
-                  width: { xs: 35, sm: 40 },
-                  height: { xs: 35, sm: 40 },
-                  backgroundColor: '#F5F5F5',
-                  borderRadius: '20px',
-                  display: { xs: 'none', sm: 'flex' },
-                  '&:hover': {
-                    backgroundColor: '#EEEEEE',
-                  },
-                }}
-              >
-                <HelpIcon sx={{ fontSize: { xs: 16, sm: 20 }, color: '#757575' }} />
-              </IconButton>
-
-              {/* Profile Circle */}
-              <IconButton
-                onClick={handleProfileClick}
-                sx={{
-                  width: { xs: 35, sm: 40 },
-                  height: { xs: 35, sm: 40 },
-                  backgroundColor: '#4CAF50',
-                  borderRadius: '20px',
-                  '&:hover': {
-                    backgroundColor: '#388E3C',
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
+                    backgroundColor: '#4CAF50',
                     color: '#FFFFFF',
-                    fontWeight: 600,
-                    fontSize: { xs: '14px', sm: '16px' },
-                  }}
-                >
-                  A
-                </Typography>
-              </IconButton>
+                    borderColor: '#4CAF50',
+                  },
+                }}
+              >
+                {t('nav.login_register')}
+              </Button>
+
+              {/* For Executors Button */}
+              <Button
+                variant="contained"
+                sx={{
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: { xs: '12px', sm: '14px' },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  backgroundColor: '#000000',
+                  color: '#FFFFFF',
+                  '&:hover': {
+                    backgroundColor: '#333333',
+                  },
+                }}
+              >
+                {t('nav.for_executors')}
+              </Button>
             </Box>
           </Box>
         </Toolbar>
       </AppBar>
 
-
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleProfileClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
+      {/* Mobile Top Bar */}
+      <AppBar
+        position="fixed"
         sx={{
-          zIndex: 10000, // Higher than AppBar z-index
+          backgroundColor: '#FFFFFF',
+          color: '#000000',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          height: 60,
+          zIndex: 9999,
+          top: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
+          maxWidth: '100vw',
+          position: 'fixed',
+          display: { xs: 'block', sm: 'none' }, // Show only on mobile
         }}
-        disableAutoFocusItem
-        disableEnforceFocus
-        disableRestoreFocus
       >
-        <MenuItem onClick={() => handleMenuAction('profile')}>
-          <ListItemIcon>
-            <PersonIcon sx={{ fontSize: 20, color: '#757575' }} />
-          </ListItemIcon>
-          <ListItemText>{t('nav.profile')}</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleMenuAction('designs')}>
-          <ListItemIcon>
-            <DesignIcon sx={{ fontSize: 20, color: '#757575' }} />
-          </ListItemIcon>
-          <ListItemText>{t('nav.designs')}</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleMenuAction('settings')}>
-          <ListItemIcon>
-            <SettingsIcon sx={{ fontSize: 20, color: '#757575' }} />
-          </ListItemIcon>
-          <ListItemText>{t('nav.settings')}</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleMenuAction('logout')}>
-          <ListItemIcon>
-            <LogoutIcon sx={{ fontSize: 20, color: '#F44336' }} />
-          </ListItemIcon>
-          <ListItemText sx={{ color: '#F44336' }}>Выйти</ListItemText>
-        </MenuItem>
-      </Menu>
+        <Toolbar sx={{ 
+          height: 60, 
+          px: 2, 
+          justifyContent: 'space-between',
+          minHeight: 60,
+        }}>
+          {/* Mobile Logo */}
+          <Box 
+            onClick={handleLogoClick}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.8,
+              }
+            }}
+          >
+            <DobalitoLogo />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#4CAF50',
+                fontSize: '18px',
+                letterSpacing: '0.5px',
+              }}
+            >
+              doBalito
+            </Typography>
+          </Box>
+
+          {/* Mobile Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <LanguageSelector />
+          </Box>
+        </Toolbar>
+      </AppBar>
 
       {/* Sidebar with Categories */}
       <Drawer
@@ -427,11 +391,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           backgroundColor: '#FAFAFA',
           overflow: 'auto',
-          paddingTop: '90px',
+          paddingTop: { xs: '70px', sm: '90px' }, // Adjust for mobile top bar
+          paddingBottom: { xs: '70px', sm: 0 }, // Add bottom padding for mobile
         }}
       >
         {children}
       </Box>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation />
     </Box>
   );
 };

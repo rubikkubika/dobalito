@@ -56,7 +56,7 @@ const LanguageSelector: React.FC = () => {
           textTransform: 'none',
           fontWeight: 600,
           backgroundColor: '#2196F3',
-          borderRadius: '50%',
+          borderRadius: '8px',
           width: 40,
           height: 40,
           minWidth: 'auto',
