@@ -1,7 +1,10 @@
 package com.dobalito.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "categories")
@@ -34,6 +37,10 @@ public class Category {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<User> users = new HashSet<>();
     
     // Constructors
     public Category() {
@@ -129,6 +136,14 @@ public class Category {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Set<User> getUsers() {
+        return users;
+    }
+    
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
     
     @PreUpdate

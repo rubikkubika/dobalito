@@ -46,5 +46,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "LOWER(u.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<User> findByNameOrEmailContaining(@Param("searchTerm") String searchTerm);
+    
+    /**
+     * Найти пользователей по категории
+     */
+    @Query("SELECT DISTINCT u FROM User u JOIN u.categories c WHERE c.id = :categoryId")
+    List<User> findByCategoryId(@Param("categoryId") Long categoryId);
+    
+    /**
+     * Найти пользователей по названию категории
+     */
+    @Query("SELECT DISTINCT u FROM User u JOIN u.categories c WHERE c.name = :categoryName")
+    List<User> findByCategoryName(@Param("categoryName") String categoryName);
+    
+    /**
+     * Найти всех пользователей (исполнителей)
+     */
+    @Query("SELECT u FROM User u")
+    List<User> findAllUsers();
 }
 

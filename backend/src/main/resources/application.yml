@@ -23,6 +23,13 @@ spring:
         jdbc:
           time_zone: UTC
   
+  # SQL Initialization (disabled - using DataLoader instead)
+  # sql:
+  #   init:
+  #     mode: always
+  #     schema-locations: classpath:schema.sql
+  #     continue-on-error: true
+  
   # File Upload Configuration
   servlet:
     multipart:

@@ -28,6 +28,9 @@ public class DataLoader implements CommandLineRunner {
         if (categoryRepository.count() == 0) {
             createTestCategories();
         }
+        
+        // Создаем пользователя Sammy с категориями
+        createSammyWithCategories();
     }
     
     private void createTestUsers() {
@@ -80,5 +83,34 @@ public class DataLoader implements CommandLineRunner {
         categoryRepository.save(tourismCategory);
         
         System.out.println("Создано " + categoryRepository.count() + " тестовых категорий");
+    }
+    
+    private void createSammyWithCategories() {
+        // Проверяем, существует ли уже пользователь Sammy
+        if (userRepository.findByEmail("sammy@example.com").isEmpty()) {
+            // Создаем пользователя Sammy
+            User sammy = new User("Sammy", "sammy@example.com", "https://example.com/avatars/sammy.jpg");
+            
+            // Находим категории "Серфинг" и "Аренда байка"
+            Category surfingCategory = categoryRepository.findByName("Серфинг").orElse(null);
+            Category bikeRentalCategory = categoryRepository.findByName("Аренда байка").orElse(null);
+            
+            // Добавляем категории к пользователю
+            if (surfingCategory != null) {
+                sammy.addCategory(surfingCategory);
+            }
+            if (bikeRentalCategory != null) {
+                sammy.addCategory(bikeRentalCategory);
+            }
+            
+            // Сохраняем пользователя
+            userRepository.save(sammy);
+            
+            System.out.println("Создан пользователь Sammy с категориями: " + 
+                (surfingCategory != null ? "Серфинг " : "") + 
+                (bikeRentalCategory != null ? "Аренда байка" : ""));
+        } else {
+            System.out.println("Пользователь Sammy уже существует");
+        }
     }
 }

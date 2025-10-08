@@ -175,4 +175,31 @@ public class UserController {
             "updatedFields", profileData.keySet()
         ));
     }
+    
+    /**
+     * Получить всех исполнителей (пользователей)
+     */
+    @GetMapping("/executors")
+    public ResponseEntity<List<User>> getExecutors() {
+        List<User> users = userService.getAllExecutors();
+        return ResponseEntity.ok(users);
+    }
+    
+    /**
+     * Получить пользователей по категории
+     */
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<List<User>> getUsersByCategory(@PathVariable Long categoryId) {
+        List<User> users = userService.getUsersByCategory(categoryId);
+        return ResponseEntity.ok(users);
+    }
+    
+    /**
+     * Получить пользователей по названию категории
+     */
+    @GetMapping("/by-category-name/{categoryName}")
+    public ResponseEntity<List<User>> getUsersByCategoryName(@PathVariable String categoryName) {
+        List<User> users = userService.getUsersByCategoryName(categoryName);
+        return ResponseEntity.ok(users);
+    }
 }

@@ -2,6 +2,8 @@ package com.dobalito.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -25,6 +27,14 @@ public class User {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_categories",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories = new HashSet<>();
     
     // Constructors
     public User() {
@@ -89,6 +99,23 @@ public class User {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Set<Category> getCategories() {
+        return categories;
+    }
+    
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
+    
+    // Helper methods for managing categories
+    public void addCategory(Category category) {
+        categories.add(category);
+    }
+    
+    public void removeCategory(Category category) {
+        categories.remove(category);
     }
     
     @PreUpdate

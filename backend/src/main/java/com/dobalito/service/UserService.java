@@ -141,5 +141,26 @@ public class UserService {
     public Path getAvatarPath(String filename) {
         return Paths.get(UPLOAD_DIR + filename);
     }
+    
+    /**
+     * Получить пользователей по категории
+     */
+    public List<User> getUsersByCategory(Long categoryId) {
+        return userRepository.findByCategoryId(categoryId);
+    }
+    
+    /**
+     * Получить пользователей по названию категории
+     */
+    public List<User> getUsersByCategoryName(String categoryName) {
+        return userRepository.findByCategoryName(categoryName);
+    }
+    
+    /**
+     * Получить всех исполнителей (пользователей)
+     */
+    public List<User> getAllExecutors() {
+        return userRepository.findAllUsers();
+    }
 }
 
