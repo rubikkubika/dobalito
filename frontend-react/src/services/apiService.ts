@@ -110,6 +110,17 @@ export const apiService = {
     const response = await api.get(`/categories/search/active?q=${encodeURIComponent(query)}&lang=${language}`);
     return response.data;
   },
+
+  // Users/Executors
+  async getExecutors() {
+    const response = await api.get('/users/executors');
+    return response.data;
+  },
+
+  async getExecutorsByCategory(categoryId: number) {
+    const response = await api.get(`/users/by-category/${categoryId}`);
+    return response.data;
+  },
 };
 
 export default api;

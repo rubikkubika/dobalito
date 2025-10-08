@@ -43,23 +43,34 @@ const ExecutorsPage: React.FC = () => {
     const fetchExecutors = async () => {
       setLoading(true);
       try {
-        // Здесь будет API вызов для получения исполнителей по категории
-        // const data = await apiService.getExecutorsByCategory(category);
-        // setExecutors(data);
-        
-        // Пока что пустой массив
-        setExecutors([]);
+        if (category) {
+          // Найти ID категории по имени
+          const selectedCategory = categories.find(cat => cat.name === category);
+          if (selectedCategory) {
+            const data = await apiService.getExecutorsByCategory(selectedCategory.id);
+            setExecutors(data);
+          } else {
+            // Если категория не найдена, показываем пустой список
+            setExecutors([]);
+          }
+        } else {
+          // Если категория не указана, получаем всех исполнителей
+          const data = await apiService.getExecutors();
+          setExecutors(data);
+        }
       } catch (error) {
         console.error('Error fetching executors:', error);
+        // При ошибке показываем пустой список
+        setExecutors([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (category) {
+    if (!categoriesLoading) {
       fetchExecutors();
     }
-  }, [category]);
+  }, [category, categories, categoriesLoading]);
 
   const handleBackClick = () => {
     navigate('/home');
@@ -153,7 +164,7 @@ const ExecutorsPage: React.FC = () => {
                   color: '#000000',
                 }}
               >
-                {t('executors.title')} "{category}"
+                {category ? `${t('executors.title')} "${category}"` : t('executors.title')}
               </Typography>
             </Box>
 

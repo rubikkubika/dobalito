@@ -30,7 +30,7 @@ const BottomNavigation: React.FC = () => {
         navigate('/profile');
         break;
       case 3:
-        navigate('/executors/1'); // Default to first category
+        navigate('/executors'); // Navigate to executors page
         break;
     }
   };
