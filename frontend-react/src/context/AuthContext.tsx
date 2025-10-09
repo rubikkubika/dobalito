@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { apiService } from '../services/apiService';
 
 export interface User {
   id: number;
@@ -35,44 +36,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Восстанавливаем пользователя из localStorage при загрузке (неблокирующе)
+  useEffect(() => {
+    const loadUserFromStorage = () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser: User = JSON.parse(storedUser);
+          setUser(parsedUser);
+        }
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+        localStorage.removeItem('user');
+      }
+    };
+
+    loadUserFromStorage();
+  }, []);
+
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Здесь будет реальный API вызов
-      // Пока что симулируем успешный вход
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Реальный API вызов
+      const response = await apiService.login(email, password);
       
-      // Создаем тестового пользователя с категориями
-      const mockUser: User = {
-        id: 1,
-        name: 'Test User',
-        email: email,
-        avatar: 'https://via.placeholder.com/150',
-        categories: [
-          {
-            id: 1,
-            name: 'Серфинг',
-            englishName: 'Surfing',
-            description: 'Услуги и товары для серфинга',
-            color: '#00B4DB'
-          },
-          {
-            id: 2,
-            name: 'Аренда байка',
-            englishName: 'Bike Rental',
-            description: 'Аренда велосипедов и мотоциклов',
-            color: '#FF6B6B'
-          }
-        ]
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } catch (err) {
-      setError('Ошибка входа. Проверьте данные.');
-      throw err;
+      if (response.success) {
+        const userData: User = {
+          id: response.user.id,
+          name: response.user.name,
+          email: response.user.email,
+          avatar: response.user.avatar || undefined,
+          categories: [] // Пока без категорий, можно добавить позже
+        };
+        
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        throw new Error(response.message || 'Ошибка авторизации');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Ошибка входа. Проверьте данные.';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -82,18 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     localStorage.removeItem('user');
   };
-
-  // Проверяем localStorage при инициализации
-  React.useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (err) {
-        localStorage.removeItem('user');
-      }
-    }
-  }, []);
 
   const value: AuthContextType = {
     user,

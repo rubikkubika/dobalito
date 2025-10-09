@@ -33,13 +33,13 @@ public class DataLoader implements CommandLineRunner {
         createSammyWithCategories();
     }
     
-    private void createTestUsers() {
-        // Создаем несколько тестовых пользователей
-        User user1 = new User("Иван Петров", "ivan.petrov@example.com", "https://via.placeholder.com/150/FF6B6B/FFFFFF?text=IP");
-        User user2 = new User("Мария Сидорова", "maria.sidorova@example.com", "https://via.placeholder.com/150/4ECDC4/FFFFFF?text=MS");
-        User user3 = new User("Алексей Козлов", "alexey.kozlov@example.com", null); // Без аватарки
-        User user4 = new User("Елена Волкова", "elena.volkova@example.com", "https://via.placeholder.com/150/45B7D1/FFFFFF?text=EV");
-        User user5 = new User("Дмитрий Новиков", "dmitry.novikov@example.com", null); // Без аватарки
+        private void createTestUsers() {
+            // Создаем несколько тестовых пользователей с паролем "password123"
+            User user1 = new User("Иван Петров", "ivan.petrov@example.com", "password123", "https://via.placeholder.com/150/FF6B6B/FFFFFF?text=IP");
+            User user2 = new User("Мария Сидорова", "maria.sidorova@example.com", "password123", "https://via.placeholder.com/150/4ECDC4/FFFFFF?text=MS");
+            User user3 = new User("Алексей Козлов", "alexey.kozlov@example.com", "password123", null); // Без аватарки
+            User user4 = new User("Елена Волкова", "elena.volkova@example.com", "password123", "https://via.placeholder.com/150/45B7D1/FFFFFF?text=EV");
+            User user5 = new User("Дмитрий Новиков", "dmitry.novikov@example.com", "password123", null); // Без аватарки
         
         userRepository.save(user1);
         userRepository.save(user2);
@@ -85,11 +85,11 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("Создано " + categoryRepository.count() + " тестовых категорий");
     }
     
-    private void createSammyWithCategories() {
-        // Проверяем, существует ли уже пользователь Sammy
-        if (userRepository.findByEmail("sammy@example.com").isEmpty()) {
-            // Создаем пользователя Sammy
-            User sammy = new User("Sammy", "sammy@example.com", "https://example.com/avatars/sammy.jpg");
+        private void createSammyWithCategories() {
+            // Проверяем, существует ли уже пользователь Sammy
+            if (userRepository.findByEmail("sammy@example.com").isEmpty()) {
+                // Создаем пользователя Sammy с паролем "password123"
+                User sammy = new User("Sammy", "sammy@example.com", "password123", "https://example.com/avatars/sammy.jpg");
             
             // Находим категории "Серфинг" и "Аренда байка"
             Category surfingCategory = categoryRepository.findByName("Серфинг").orElse(null);

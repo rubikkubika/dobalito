@@ -122,14 +122,19 @@ export const apiService = {
     return response.data;
   },
 
-  // Authentication
-  async login(email: string, password: string) {
-    const response = await api.post('/auth/login', {
-      email,
-      password
-    });
-    return response.data;
-  },
+      // Authentication
+      async login(email: string, password: string) {
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        
+        const response = await api.post('/auth/login-form', formData, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+        return response.data;
+      },
 
   async register(email: string, password: string, name: string) {
     const response = await api.post('/auth/register', {
