@@ -95,8 +95,8 @@ jobs:
           
           # Создаем .env файл для продакшена
           cat > .env << EOF
-          BACKEND_IMAGE=${{ env.REGISTRY_URL }}/${{ env.BACKEND_IMAGE }}:latest
-          FRONTEND_IMAGE=${{ env.REGISTRY_URL }}/${{ env.FRONTEND_IMAGE }}:latest
+          BACKEND_IMAGE=retsko.ru/${{ env.BACKEND_IMAGE }}:latest
+          FRONTEND_IMAGE=retsko.ru/${{ env.FRONTEND_IMAGE }}:latest
           DATABASE_URL=jdbc:postgresql://postgres:5432/dobalito
           DB_USERNAME=postgres
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
