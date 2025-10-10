@@ -33,7 +33,6 @@ jobs:
         sudo systemctl restart docker
         sleep 5
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
-        echo "DOCKER_HOST=tcp://localhost:2376" >> $GITHUB_ENV
     
     - name: Add self-signed certificate to trusted
       run: |
@@ -45,6 +44,7 @@ jobs:
       run: |
         mkdir -p ~/.docker
         echo '{"insecure-registries":["89.208.14.20"]}' > ~/.docker/config.json
+        sudo chown -R runner:runner ~/.docker
     
     - name: Login to Private Registry
       uses: docker/login-action@v3
