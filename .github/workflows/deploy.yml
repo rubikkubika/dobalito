@@ -13,8 +13,11 @@ env:
   FRONTEND_IMAGE: dobalito-frontend
 
 jobs:
-  build-and-deploy:
+  build-images:
     runs-on: ubuntu-latest
+    outputs:
+      backend-image: ${{ steps.meta.outputs.tags }}
+      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
     
     steps:
     - name: Checkout code
@@ -83,6 +86,14 @@ jobs:
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+  deploy-to-server:
+    runs-on: ubuntu-latest
+    needs: build-images
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Prepare server directories
       uses: appleboy/ssh-action@v1.0.3
@@ -125,6 +136,9 @@ jobs:
           
           # Переименовываем env.production в .env
           mv env.production .env
+          
+          # Логинимся в приватный registry
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
           
           # Перезапускаем сервисы с продакшен конфигурацией
           docker-compose -f docker/docker-compose.prod.yml down
