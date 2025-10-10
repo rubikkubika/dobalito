@@ -45,10 +45,42 @@ public class UserService {
     }
     
     /**
+     * Получить пользователя по номеру телефона
+     */
+    public Optional<User> getUserByPhone(String phone) {
+        return userRepository.findByPhone(phone);
+    }
+    
+    /**
      * Создать нового пользователя
      */
     public User createUser(User user) {
         return userRepository.save(user);
+    }
+    
+    /**
+     * Создать или обновить пользователя по номеру телефона
+     */
+    public User createOrUpdateUserByPhone(String phone, String name) {
+        Optional<User> existingUser = userRepository.findByPhone(phone);
+        
+        if (existingUser.isPresent()) {
+            // Обновляем существующего пользователя
+            User user = existingUser.get();
+            if (name != null && !name.trim().isEmpty()) {
+                user.setName(name);
+            }
+            return userRepository.save(user);
+        } else {
+            // Создаем нового пользователя
+            User newUser = new User();
+            newUser.setPhone(phone);
+            newUser.setName(name != null ? name : "Пользователь");
+            // Генерируем временный email на основе телефона
+            newUser.setEmail("temp_" + phone + "@dobalito.local");
+            newUser.setPassword("phone_auth"); // Временный пароль
+            return userRepository.save(newUser);
+        }
     }
     
     /**
