@@ -55,21 +55,36 @@ docker-compose down
 ## 📋 Содержание
 
 ### 👤 Для пользователей
-- **[user-rules.md](user-rules.md)** - Правила использования и запуска
+- **[user-guide/](user-guide/)** - Руководства пользователя и правила использования
 
 ### 🔧 Для разработчиков
-- **[development-rules.md](development-rules.md)** - Подробные правила разработки
+- **[development/](development/)** - Правила разработки и стандарты кодирования
+
+### 🌐 API документация
+- **[api/](api/)** - Документация API, эндпоинты и схемы
+
+### 🚀 Развертывание
+- **[deployment/](deployment/)** - Руководства по развертыванию и настройке
+
+### 🏗️ Архитектура
+- **[architecture/](architecture/)** - Системная архитектура и дизайн
 
 ## 📁 Структура проекта
 
 ```
 dobalito/
 ├── frontend-react/          # React приложение
-├── backend/           # Spring Boot API
-├── docs/              # Документация (эта папка)
-├── scripts/           # Скрипты запуска
-├── database/          # SQL скрипты
-└── docker-compose.yml # Docker конфигурация
+├── backend/                 # Spring Boot API
+├── docs/                   # Документация (эта папка)
+│   ├── development/        # Правила разработки
+│   ├── user-guide/         # Руководства пользователя
+│   ├── api/               # API документация
+│   ├── deployment/        # Развертывание
+│   └── architecture/      # Архитектура системы
+├── scripts/               # Скрипты запуска
+├── docker/               # Docker конфигурации
+├── temp/                 # Временные файлы
+└── README.md            # Основная документация
 ```
 
 ## 🆘 Поддержка

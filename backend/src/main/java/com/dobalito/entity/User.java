@@ -22,7 +22,7 @@ public class User {
     @Column(name = "email", unique = true, length = 255)
     private String email;
     
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
     
     @Column(name = "phone", unique = true, length = 20)
@@ -45,6 +45,12 @@ public class User {
     // Constructors
     public User() {
         this.createdAt = LocalDateTime.now();
+    }
+    
+    public User(String name, String email) {
+        this();
+        this.name = name;
+        this.email = email;
     }
     
     public User(String name, String email, String password) {

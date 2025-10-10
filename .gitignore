@@ -83,3 +83,25 @@ Thumbs.db
 # Uploads
 uploads/
 backend/uploads/
+
+# Temporary files and folders
+temp/
+tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+
+# Development temporary files
+cookies*.txt
+*.debug
+*.test
+maven*.log
+*.error.log
+
+# IDE temporary files
+*.orig
+*.rej
