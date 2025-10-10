@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
 
     if (!phone.trim()) {
       errors.phone = t('phone.phone_required');
-    } else if (!/^[\+]?[0-9\s\-\(\)]{10,15}$/.test(phone)) {
+    } else if (!/^[+]?[0-9\s\-()]{10,15}$/.test(phone)) {
       errors.phone = t('phone.phone_invalid');
     }
 
