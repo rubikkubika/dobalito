@@ -84,6 +84,16 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
+    - name: Copy docker-compose.yml to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "docker/docker-compose.yml"
+        target: "/opt/dobalito/docker/"
+        strip_components: 1
+    
     - name: Deploy to Server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -91,6 +101,10 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
+          # Создаем директорию проекта если не существует
+          sudo mkdir -p /opt/dobalito/docker
+          sudo chown $USER:$USER /opt/dobalito
+        
           cd /opt/dobalito
           
           # Создаем .env файл для продакшена
