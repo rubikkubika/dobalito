@@ -22,8 +22,11 @@ public class User {
     @Column(name = "email", unique = true, length = 255)
     private String email;
     
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
+    
+    @Column(name = "phone", unique = true, length = 20)
+    private String phone;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -44,6 +47,12 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
     
+    public User(String name, String email) {
+        this();
+        this.name = name;
+        this.email = email;
+    }
+    
     public User(String name, String email, String password) {
         this();
         this.name = name;
@@ -53,6 +62,12 @@ public class User {
     
     public User(String name, String email, String password, String avatar) {
         this(name, email, password);
+        this.avatar = avatar;
+    }
+    
+    public User(String name, String email, String password, String phone, String avatar) {
+        this(name, email, password);
+        this.phone = phone;
         this.avatar = avatar;
     }
     
@@ -95,6 +110,14 @@ public class User {
     
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    public String getPhone() {
+        return phone;
+    }
+    
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
     
     public LocalDateTime getCreatedAt() {
@@ -141,6 +164,7 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
                 ", avatar='" + avatar + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

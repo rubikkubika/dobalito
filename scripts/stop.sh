@@ -1,8 +1,8 @@
 #!/bin/bash
+# Скрипт для остановки всех сервисов
 
-echo "Stopping Dobalito Application..."
+echo "🛑 Остановка всех сервисов..."
 
-# Stop all services
-docker-compose down
+docker-compose -f docker/docker-compose.yml down
 
-echo "All services stopped successfully!"
+echo "✅ Все сервисы остановлены!"

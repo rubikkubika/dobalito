@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../config/database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -26,20 +26,25 @@ services:
 
   # Spring Boot Backend
   backend:
+    image: ${BACKEND_IMAGE:-dobalito-backend:latest}
     build:
       context: ..
       dockerfile: backend/Dockerfile
       args:
         BUILDKIT_INLINE_CACHE: 1
-    image: dobalito-backend
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/dobalito}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
+      JWT_SECRET: ${JWT_SECRET:-dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-30000}
       SERVER_PORT: ${BACKEND_PORT:-8080}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,12 +54,12 @@ services:
 
   # React Frontend
   frontend-react:
+    image: ${FRONTEND_IMAGE:-dobalito-frontend:latest}
     build:
       context: ..
       dockerfile: docker/Dockerfile.frontend-react
       args:
         BUILDKIT_INLINE_CACHE: 1
-    image: dobalito-frontend
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
     environment:
       REACT_APP_API_URL: ${BACKEND_URL:-http://backend:8080}
@@ -73,6 +78,7 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
 
 networks:
   dobalito-network:

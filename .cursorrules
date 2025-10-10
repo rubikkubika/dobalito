@@ -239,3 +239,98 @@ const translations = {
 - ALWAYS let user decide when to start/restart services
 - NEVER assume user wants immediate service restart
 - ALWAYS respect user's development workflow preferences
+
+## 📁 Temporary Files Management Rules
+**ALL temporary files MUST be placed in the `temp/` directory**
+
+### Required Placement:
+- ✅ `temp/` - All temporary files and folders
+- ✅ `temp/debug/` - Debug files and logs
+- ✅ `temp/test/` - Test files and outputs
+- ✅ `temp/cookies*.txt` - Cookie files
+- ✅ `temp/*.log` - Log files
+- ✅ `temp/*.tmp` - Temporary files
+
+### Forbidden Placement:
+- ❌ Temporary files in project root
+- ❌ Temporary files in backend/ or frontend-react/
+- ❌ Temporary files in git-tracked directories
+- ❌ Log files outside temp/ directory
+
+### Temporary file types:
+- **Debug files**: `*.debug`, `*.test`, `*.tmp`
+- **Log files**: `*.log`, `*.error.log`, `maven*.log`
+- **Cookie files**: `cookies*.txt`, `cookies-after-*.txt`
+- **Backup files**: `*.bak`, `*.backup`
+- **IDE temp files**: `*.swp`, `*.swo`, `*~`
+
+### Git exclusion:
+- All files in `temp/` directory are automatically ignored by git
+- Temporary files are never committed to repository
+- Clean up temp/ directory regularly
+
+### Enforcement:
+- ALWAYS create temporary files in `temp/` directory
+- ALWAYS use descriptive subdirectories in `temp/`
+- ALWAYS clean up temporary files after debugging
+- NEVER commit temporary files to git
+- ALWAYS use `temp/` for any development artifacts
+
+## 📚 Documentation Management Rules
+**ALL documentation files MUST be placed in the `docs/` directory**
+
+### Required Placement:
+- ✅ `docs/` - All documentation files
+- ✅ `docs/development/` - Development guides and rules
+- ✅ `docs/user-guide/` - User documentation and guides
+- ✅ `docs/api/` - API documentation
+- ✅ `docs/deployment/` - Deployment guides
+- ✅ `docs/architecture/` - System architecture docs
+
+### Forbidden Placement:
+- ❌ Documentation files in project root
+- ❌ Documentation files in backend/ or frontend-react/
+- ❌ README files outside docs/ (except main README.md)
+- ❌ Documentation scattered across different directories
+
+### Documentation file types:
+- **Guides**: `*.md`, `*.rst`, `*.txt`
+- **API docs**: `api-*.md`, `swagger-*.md`
+- **Architecture**: `architecture-*.md`, `design-*.md`
+- **Deployment**: `deploy-*.md`, `setup-*.md`
+- **User guides**: `user-*.md`, `guide-*.md`
+
+### Documentation structure:
+```
+docs/
+├── README.md              # Main documentation index
+├── development/           # Development guides
+│   ├── development-rules.md
+│   ├── local-backend-rule.md
+│   └── coding-standards.md
+├── user-guide/           # User documentation
+│   ├── user-rules.md
+│   └── getting-started.md
+├── api/                  # API documentation
+│   ├── api-reference.md
+│   └── endpoints.md
+├── deployment/           # Deployment guides
+│   ├── docker-deployment.md
+│   └── production-setup.md
+└── architecture/         # System architecture
+    ├── system-overview.md
+    └── database-schema.md
+```
+
+### Git inclusion:
+- All files in `docs/` directory are tracked by git
+- Documentation is part of the project repository
+- Keep documentation up-to-date with code changes
+
+### Enforcement:
+- ALWAYS create documentation files in `docs/` directory
+- ALWAYS use appropriate subdirectories in `docs/`
+- ALWAYS update documentation when making code changes
+- ALWAYS maintain consistent documentation structure
+- NEVER create documentation files outside `docs/`
+- ALWAYS reference documentation from `docs/` in code comments

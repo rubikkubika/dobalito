@@ -32,6 +32,13 @@ dobalito/
 │   ├── pom.xml                  # Maven зависимости
 │   ├── Dockerfile               # Backend Docker образ
 │   └── README.md                # Документация бэкенда
+├── docs/                        # 📚 ВСЯ ДОКУМЕНТАЦИЯ
+│   ├── development/             # Правила разработки
+│   ├── user-guide/              # Руководства пользователя
+│   ├── api/                     # API документация
+│   ├── deployment/              # Развертывание
+│   ├── architecture/            # Архитектура системы
+│   └── README.md                # Главная документация
 ├── docker/                      # Docker конфигурация
 │   ├── docker-compose.yml      # Основная конфигурация
 │   ├── Dockerfile.frontend-react # React Frontend Docker образ
@@ -54,6 +61,8 @@ dobalito/
 │   ├── deployment.md           # Подробная инструкция
 │   ├── quick-deploy.md         # Быстрая инструкция
 │   └── README.md               # Деплой документация
+├── temp/                        # Временные файлы (игнорируется git)
+└── README.md                    # Этот файл
 ```
 
 ## Быстрый старт
@@ -105,9 +114,12 @@ dobalito/
 2. **После запуска автоматически открывается фронтенд** в браузере
 3. **Не используйте `docker-compose up` напрямую** - это медленнее и менее удобно
 
-📖 **Подробные правила разработки:** [docs/development-rules.md](docs/development-rules.md)  
-⚡ **Быстрый старт:** [docs/README.md](docs/README.md)  
-👤 **Правила для пользователя:** [docs/user-rules.md](docs/user-rules.md)
+📖 **Полная документация:** [docs/README.md](docs/README.md)  
+🔧 **Правила разработки:** [docs/development/](docs/development/)  
+👤 **Руководства пользователя:** [docs/user-guide/](docs/user-guide/)  
+🌐 **API документация:** [docs/api/](docs/api/)  
+🚀 **Развертывание:** [docs/deployment/](docs/deployment/)  
+🏗️ **Архитектура:** [docs/architecture/](docs/architecture/)
 
 ### Разработка
 

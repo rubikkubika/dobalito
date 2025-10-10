@@ -190,7 +190,15 @@ const ExecutorsPage: React.FC = () => {
                   <Card key={index} sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(33.333% - 8px)' } }}>
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar sx={{ mr: 2, bgcolor: '#2196F3' }}>
+                        <Avatar 
+                          src={executor.avatar ? `http://localhost:8080${executor.avatar}` : undefined}
+                          sx={{ 
+                            mr: 2, 
+                            bgcolor: '#2196F3',
+                            width: 48,
+                            height: 48
+                          }}
+                        >
                           {executor.name?.charAt(0) || 'E'}
                         </Avatar>
                         <Box>

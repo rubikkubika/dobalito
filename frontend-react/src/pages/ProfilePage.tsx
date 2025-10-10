@@ -1,5 +1,5 @@
 // Profile page component
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -13,18 +13,26 @@ import {
   Divider,
   Chip,
   Grid,
+  IconButton,
 } from '@mui/material';
-import { Edit as EditIcon, Email as EmailIcon, Person as PersonIcon } from '@mui/icons-material';
+import { 
+  Edit as EditIcon, 
+  Email as EmailIcon, 
+  Person as PersonIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Delete as DeleteIcon
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../hooks/useCategories';
+import { apiService } from '../services/apiService';
 import CategoryList from '../components/CategoryList';
 import { getResponsiveValue } from '../utils/helpers';
 import { Category } from '../types';
 
 const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -34,6 +42,8 @@ const ProfilePage: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getBackendLanguage = () => {
     return language === 'ru' ? 'ru' : 'en';
@@ -50,13 +60,63 @@ const ProfilePage: React.FC = () => {
     setError(null);
     
     try {
-      // Здесь будет реальный API вызов для обновления профиля
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsEditing(false);
+      if (user?.id) {
+        await apiService.updateProfile(user.id, formData);
+        // Обновляем данные пользователя в контексте
+        updateUser({ name: formData.name, email: formData.email });
+        setIsEditing(false);
+      }
     } catch (err) {
       setError('Ошибка при сохранении профиля');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+      setError('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    // Проверяем размер файла (максимум 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Размер файла не должен превышать 5MB');
+      return;
+    }
+
+    setAvatarLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiService.uploadAvatar(user.id, file);
+      // Обновляем данные пользователя в контексте
+      updateUser({ avatar: response.avatarUrl });
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при загрузке аватара');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    if (!user?.id) return;
+
+    setAvatarLoading(true);
+    setError(null);
+
+    try {
+      await apiService.deleteAvatar(user.id);
+      // Обновляем данные пользователя в контексте
+      updateUser({ avatar: undefined });
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при удалении аватара');
+    } finally {
+      setAvatarLoading(false);
     }
   };
 
@@ -119,18 +179,78 @@ const ProfilePage: React.FC = () => {
             }}
           >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Avatar
-            src={user.avatar}
-            sx={{
-              width: 80,
-              height: 80,
-              mr: 3,
-              fontSize: '2rem',
-              backgroundColor: '#4CAF50',
-            }}
-          >
-            {user.name.charAt(0).toUpperCase()}
-          </Avatar>
+          <Box sx={{ position: 'relative', mr: 3 }}>
+            <Avatar
+              src={user.avatar ? `http://localhost:8080${user.avatar}` : undefined}
+              sx={{
+                width: 80,
+                height: 80,
+                fontSize: '2rem',
+                backgroundColor: '#4CAF50',
+              }}
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </Avatar>
+            
+            {/* Кнопки для управления аватаром */}
+            <Box sx={{ 
+              position: 'absolute', 
+              bottom: -5, 
+              right: -5,
+              display: 'flex',
+              gap: 0.5
+            }}>
+              <IconButton
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarLoading}
+                sx={{
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  width: 24,
+                  height: 24,
+                  '&:hover': {
+                    backgroundColor: '#45a049',
+                  }
+                }}
+              >
+                {avatarLoading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <PhotoCameraIcon sx={{ fontSize: 14 }} />
+                )}
+              </IconButton>
+              
+              {user.avatar && (
+                <IconButton
+                  size="small"
+                  onClick={handleAvatarDelete}
+                  disabled={avatarLoading}
+                  sx={{
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    width: 24,
+                    height: 24,
+                    '&:hover': {
+                      backgroundColor: '#d32f2f',
+                    }
+                  }}
+                >
+                  <DeleteIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              )}
+            </Box>
+            
+            {/* Скрытый input для выбора файла */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarUpload}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+          </Box>
+          
           <Box>
             <Typography
               variant="h4"
