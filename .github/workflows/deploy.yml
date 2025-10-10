@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Позволяет запускать вручную
 
 env:
-  REGISTRY_URL: http://89.208.14.20:443
+  REGISTRY_URL: 89.208.14.20:443
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
