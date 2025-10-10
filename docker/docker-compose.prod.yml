@@ -1,0 +1,75 @@
+# Docker Compose configuration for Production
+# Uses pre-built images from registry
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dobalito}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../config/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Spring Boot Backend
+  backend:
+    image: ${BACKEND_IMAGE:-retsko.ru/dobalito-backend:latest}
+    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/dobalito}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
+      JWT_SECRET: ${JWT_SECRET:-dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-30000}
+      SERVER_PORT: ${BACKEND_PORT:-8080}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend-react:
+    image: ${FRONTEND_IMAGE:-retsko.ru/dobalito-frontend:latest}
+    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
+    environment:
+      REACT_APP_API_URL: ${BACKEND_URL:-http://backend:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - dobalito-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  dobalito-network:
+    driver: bridge
