@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Позволяет запускать вручную
 
 env:
-  REGISTRY_URL: 89.208.14.20
+  REGISTRY_URL: http://89.208.14.20:443
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
@@ -23,7 +23,7 @@ jobs:
     
     - name: Configure Docker for insecure registry
       run: |
-        echo '{"insecure-registries":["89.208.14.20"]}' | sudo tee /etc/docker/daemon.json
+        echo '{"insecure-registries":["89.208.14.20:443"]}' | sudo tee /etc/docker/daemon.json
         sudo systemctl restart docker
     
     - name: Extract metadata
