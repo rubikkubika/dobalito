@@ -11,6 +11,7 @@ env:
   REGISTRY_URL: https://retsko.ru
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
+  POSTGRES_IMAGE: dobalito-postgres
 
 jobs:
   build-and-deploy:
@@ -81,6 +82,28 @@ jobs:
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Extract metadata for postgres
+      id: meta-postgres
+      uses: docker/metadata-action@v5
+      with:
+        images: retsko.ru/${{ env.POSTGRES_IMAGE }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push PostgreSQL
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile.postgres
+        push: true
+        tags: ${{ steps.meta-postgres.outputs.tags }}
+        labels: ${{ steps.meta-postgres.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
