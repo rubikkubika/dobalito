@@ -1,5 +1,5 @@
 // Home page component
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -18,44 +18,34 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
 import FeatureCard from '../components/FeatureCard';
 import CategoryList from '../components/CategoryList';
 import { getResponsiveValue } from '../utils/helpers';
 import { Category } from '../types';
 import { useCategories } from '../hooks/useCategories';
+import { useUserProfile } from '../hooks/useUserProfile';
 
 const HomePage: React.FC = () => {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
-  const getBackendLanguage = () => {
-    return language === 'ru' ? 'ru' : 'en';
-  };
+  const { isAuthenticated } = useAuth();
   
-  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories(true, getBackendLanguage());
+  // Мемоизируем язык для бэкенда, чтобы избежать лишних перерендеров
+  const backendLanguage = React.useMemo(() => {
+    return language === 'ru' ? 'ru' : 'en';
+  }, [language]);
+  
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories(true, backendLanguage);
+  const { fetchUserProfile } = useUserProfile();
 
   const handleCategoryClick = (category: Category) => {
+    // Проверяем токен перед навигацией
+    fetchUserProfile();
     navigate(`/executors/${category.name}`);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
-      try {
-        const userProfile = await apiService.getUserProfile();
-        dispatch({ type: 'SET_USER', payload: userProfile });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        dispatch({ type: 'SET_ERROR', payload: 'Ошибка загрузки данных' });
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    };
-
-    fetchData();
-  }, [dispatch]);
 
   const features = [
     {

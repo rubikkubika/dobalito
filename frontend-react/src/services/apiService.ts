@@ -9,16 +9,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Включаем отправку cookies
 });
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Токен теперь автоматически отправляется через HttpOnly cookies
+    // Не нужно вручную добавлять в заголовки
     return config;
   },
   (error) => {
@@ -32,10 +30,23 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // При 401/403 ошибке пользователь не аутентифицирован или токен истек
+      // Cookies автоматически очистятся сервером
+      console.log('🔒 JWT token expired or invalid - logging out user');
+      
+      // Очищаем состояние пользователя в localStorage
+      localStorage.removeItem('user');
+      
+      // Уведомляем компоненты об истечении токена
+      window.dispatchEvent(new CustomEvent('auth-expired'));
+      
+      // Не показываем ошибку для неавторизованных запросов
+      // Это нормальное поведение при истечении токена
+      if (error.config?.url?.includes('/auth/me') || error.config?.url?.includes('/users/profile')) {
+        console.log('🔒 Silent auth check failed - user not authenticated');
+        return Promise.reject(new Error('UNAUTHORIZED_SILENT'));
+      }
     }
     return Promise.reject(error);
   }
@@ -122,41 +133,27 @@ export const apiService = {
     return response.data;
   },
 
-      // Authentication
-      async login(email: string, password: string) {
-        const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
-        
-        const response = await api.post('/auth/login-form', formData, {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        });
-        return response.data;
-      },
+  // Phone authentication
+  async sendVerificationCode(phone: string) {
+    const response = await api.post('/auth/send-verification-code', {
+      phone
+    });
+    return response.data;
+  },
 
-      // Phone authentication
-      async sendVerificationCode(phone: string) {
-        const response = await api.post('/auth/send-verification-code', {
-          phone
-        });
-        return response.data;
-      },
+  async verifyCode(phone: string, code: string, name?: string) {
+    const response = await api.post('/auth/verify-code', {
+      phone,
+      code,
+      name
+    });
+    return response.data;
+  },
 
-      async verifyCode(phone: string, code: string, name?: string) {
-        const response = await api.post('/auth/verify-code', {
-          phone,
-          code,
-          name
-        });
-        return response.data;
-      },
-
-      async checkCodeStatus(phone: string) {
-        const response = await api.get(`/auth/check-code-status?phone=${encodeURIComponent(phone)}`);
-        return response.data;
-      },
+  async checkCodeStatus(phone: string) {
+    const response = await api.get(`/auth/check-code-status?phone=${encodeURIComponent(phone)}`);
+    return response.data;
+  },
 
   async register(email: string, password: string, name: string) {
     const response = await api.post('/auth/register', {

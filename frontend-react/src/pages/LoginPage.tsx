@@ -8,30 +8,18 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Link,
-  Tabs,
-  Tab,
-  InputAdornment
+  Link
 } from '@mui/material';
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import PhoneIcon from '@mui/icons-material/Phone';
-import EmailIcon from '@mui/icons-material/Email';
-import SecurityIcon from '@mui/icons-material/Security';
+import PhoneInput from '../components/PhoneInput';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
-  const { login, loginWithPhone, sendVerificationCode, loading, error } = useAuth();
-  
-  // Tab state
-  const [activeTab, setActiveTab] = useState(0);
-  
-  // Email login state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { loginWithPhone, sendVerificationCode, loading, error } = useAuth();
   
   // Phone login state
   const [phone, setPhone] = useState('');
@@ -39,33 +27,13 @@ const LoginPage: React.FC = () => {
   const [name, setName] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [codeSentTo, setCodeSentTo] = useState('');
+  const [displayCode, setDisplayCode] = useState(''); // Код для отображения на экране
   
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<{
-    email?: string;
-    password?: string;
     phone?: string;
     code?: string;
   }>({});
-
-  const validateEmailForm = () => {
-    const errors: { email?: string; password?: string } = {};
-
-    if (!email.trim()) {
-      errors.email = t('login.email_required');
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = t('login.email_invalid');
-    }
-
-    if (!password.trim()) {
-      errors.password = t('login.password_required');
-    } else if (password.length < 6) {
-      errors.password = t('login.password_min_length');
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
   const validatePhoneForm = () => {
     const errors: { phone?: string; code?: string } = {};
@@ -84,31 +52,16 @@ const LoginPage: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateEmailForm()) {
-      return;
-    }
-
-    try {
-      await login(email, password);
-      const from = location.state?.from?.pathname || '/profile';
-      navigate(from, { replace: true });
-    } catch (err) {
-      // Ошибка обрабатывается в AuthContext
-    }
-  };
-
   const handleSendCode = async () => {
     if (!validatePhoneForm()) {
       return;
     }
 
     try {
-      await sendVerificationCode(phone);
+      const result = await sendVerificationCode(phone);
       setCodeSent(true);
       setCodeSentTo(phone);
+      setDisplayCode(result.code); // Сохраняем код для отображения
       setValidationErrors({});
     } catch (err) {
       // Ошибка обрабатывается в AuthContext
@@ -133,17 +86,11 @@ const LoginPage: React.FC = () => {
 
   const handleResendCode = async () => {
     try {
-      await sendVerificationCode(phone);
+      const result = await sendVerificationCode(phone);
+      setDisplayCode(result.code); // Обновляем отображаемый код
     } catch (err) {
       // Ошибка обрабатывается в AuthContext
     }
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-    setValidationErrors({});
-    setCodeSent(false);
-    setCode('');
   };
 
   return (
@@ -158,77 +105,55 @@ const LoginPage: React.FC = () => {
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-            {activeTab === 0 ? t('login.title') : t('phone.title')}
+            {t('phone.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            {activeTab === 0 ? t('login.subtitle') : t('phone.subtitle')}
+            {t('phone.subtitle')}
           </Typography>
         </Box>
 
-        <Tabs value={activeTab} onChange={handleTabChange} centered sx={{ mb: 3 }}>
-          <Tab 
-            icon={<EmailIcon />} 
-            label={t('phone.switch_to_email')} 
-            iconPosition="start"
-          />
-          <Tab 
-            icon={<PhoneIcon />} 
-            label={t('phone.switch_to_phone')} 
-            iconPosition="start"
-          />
-        </Tabs>
+        {/* Phone Login Form */}
+        <form onSubmit={handlePhoneSubmit}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                {error}
+              </Alert>
+            )}
 
-        {activeTab === 0 ? (
-          // Email Login Form
-          <form onSubmit={handleEmailSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {error && (
-                <Alert severity="error" sx={{ mb: 1 }}>
-                  {error}
-                </Alert>
-              )}
+            {codeSent && (
+              <Alert severity="success" sx={{ mb: 1 }}>
+                {t('phone.code_sent')} {codeSentTo}
+                {displayCode && (
+                  <Box sx={{ mt: 1, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ 
+                      fontWeight: 'bold', 
+                      color: '#2e7d32',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.2em'
+                    }}>
+                      {displayCode}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Код для тестирования
+                    </Typography>
+                  </Box>
+                )}
+              </Alert>
+            )}
 
-              <TextField
-                label={t('login.email')}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={!!validationErrors.email}
-                helperText={validationErrors.email}
-                fullWidth
-                disabled={loading}
-                autoComplete="email"
-                autoFocus
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+            <PhoneInput
+              value={phone}
+              onChange={setPhone}
+              error={!!validationErrors.phone}
+              helperText={validationErrors.phone}
+              disabled={loading || codeSent}
+              placeholder="900 123 45 67"
+            />
 
-              <TextField
-                label={t('login.password')}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={!!validationErrors.password}
-                helperText={validationErrors.password}
-                fullWidth
-                disabled={loading}
-                autoComplete="current-password"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SecurityIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
+            {!codeSent ? (
               <Button
-                type="submit"
+                onClick={handleSendCode}
                 variant="contained"
                 disabled={loading}
                 fullWidth
@@ -246,51 +171,37 @@ const LoginPage: React.FC = () => {
                 {loading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
-                  t('login.submit')
+                  t('phone.send_code')
                 )}
               </Button>
-            </Box>
-          </form>
-        ) : (
-          // Phone Login Form
-          <form onSubmit={handlePhoneSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {error && (
-                <Alert severity="error" sx={{ mb: 1 }}>
-                  {error}
-                </Alert>
-              )}
+            ) : (
+              <>
+                <TextField
+                  label={t('phone.code')}
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  error={!!validationErrors.code}
+                  helperText={validationErrors.code || t('phone.code_expires')}
+                  fullWidth
+                  disabled={loading}
+                  autoFocus
+                  placeholder="123456"
+                  inputProps={{ maxLength: 6 }}
+                />
 
-              {codeSent && (
-                <Alert severity="success" sx={{ mb: 1 }}>
-                  {t('phone.code_sent')} {codeSentTo}
-                </Alert>
-              )}
+                <TextField
+                  label={t('phone.name')}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  fullWidth
+                  disabled={loading}
+                  helperText={t('phone.name_optional')}
+                />
 
-              <TextField
-                label={t('phone.phone')}
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                error={!!validationErrors.phone}
-                helperText={validationErrors.phone}
-                fullWidth
-                disabled={loading || codeSent}
-                autoComplete="tel"
-                autoFocus={!codeSent}
-                placeholder="+7 900 123 45 67"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              {!codeSent ? (
                 <Button
-                  onClick={handleSendCode}
+                  type="submit"
                   variant="contained"
                   disabled={loading}
                   fullWidth
@@ -308,118 +219,34 @@ const LoginPage: React.FC = () => {
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
-                    t('phone.send_code')
+                    t('phone.verify_code')
                   )}
                 </Button>
-              ) : (
-                <>
-                  <TextField
-                    label={t('phone.code')}
-                    type="text"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    error={!!validationErrors.code}
-                    helperText={validationErrors.code || t('phone.code_expires')}
-                    fullWidth
-                    disabled={loading}
-                    autoFocus
-                    placeholder="123456"
-                    inputProps={{ maxLength: 6 }}
-                  />
 
-                  <TextField
-                    label={t('phone.name')}
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    fullWidth
-                    disabled={loading}
-                    helperText="Только для новых пользователей"
-                  />
+                <Button
+                  onClick={handleResendCode}
+                  variant="outlined"
+                  disabled={loading}
+                  fullWidth
+                  sx={{
+                    mt: 1,
+                    py: 1,
+                    fontSize: '14px',
+                    color: '#4CAF50',
+                    borderColor: '#4CAF50',
+                    '&:hover': {
+                      borderColor: '#45a049',
+                      backgroundColor: 'rgba(76, 175, 80, 0.04)'
+                    }
+                  }}
+                >
+                  {t('phone.resend_code')}
+                </Button>
+              </>
+            )}
+          </Box>
+        </form>
 
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    fullWidth
-                    sx={{
-                      mt: 2,
-                      py: 1.5,
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      backgroundColor: '#4CAF50',
-                      '&:hover': {
-                        backgroundColor: '#45a049'
-                      }
-                    }}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      t('phone.verify_code')
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={handleResendCode}
-                    variant="outlined"
-                    disabled={loading}
-                    fullWidth
-                    sx={{
-                      mt: 1,
-                      py: 1,
-                      fontSize: '14px',
-                      color: '#4CAF50',
-                      borderColor: '#4CAF50',
-                      '&:hover': {
-                        borderColor: '#45a049',
-                        backgroundColor: 'rgba(76, 175, 80, 0.04)'
-                      }
-                    }}
-                  >
-                    {t('phone.resend_code')}
-                  </Button>
-                </>
-              )}
-            </Box>
-          </form>
-        )}
-
-        <Box sx={{ textAlign: 'center', mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Нет аккаунта?{' '}
-            <Link
-              component={RouterLink}
-              to="/register"
-              sx={{
-                color: '#4CAF50',
-                textDecoration: 'none',
-                fontWeight: 600,
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
-              }}
-            >
-              Зарегистрироваться
-            </Link>
-          </Typography>
-        </Box>
-
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Link
-            component={RouterLink}
-            to="/home"
-            sx={{
-              color: '#757575',
-              textDecoration: 'none',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}
-          >
-            ← Вернуться на главную
-          </Link>
-        </Box>
       </Paper>
     </Container>
   );

@@ -62,3 +62,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key}
+  expiration: ${JWT_EXPIRATION:30000} # 30 seconds in milliseconds

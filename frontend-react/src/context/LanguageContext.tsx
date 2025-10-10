@@ -54,19 +54,6 @@ const translations = {
     'executors.empty': 'Список исполнителей пуст',
     'executors.empty_desc': 'В данной категории пока нет исполнителей',
     
-    // Login
-    'login.title': 'Вход в систему',
-    'login.subtitle': 'Введите свои данные для входа',
-    'login.email': 'Email',
-    'login.password': 'Пароль',
-    'login.submit': 'Войти',
-    'login.cancel': 'Отмена',
-    'login.email_required': 'Email обязателен',
-    'login.email_invalid': 'Неверный формат email',
-    'login.password_required': 'Пароль обязателен',
-    'login.password_min_length': 'Пароль должен содержать минимум 6 символов',
-    'login.success': 'Успешный вход!',
-    'login.error': 'Ошибка входа. Проверьте данные.',
     
     // Phone login
     'phone.title': 'Вход по номеру телефона',
@@ -85,8 +72,9 @@ const translations = {
     'phone.code_expires': 'Код действителен 10 минут',
     'phone.success': 'Успешная авторизация!',
     'phone.error': 'Ошибка авторизации по телефону',
-    'phone.switch_to_email': 'Войти по email',
-    'phone.switch_to_phone': 'Войти по телефону',
+    'phone.country_code': 'Код страны',
+    'phone.phone_number': 'Номер телефона',
+    'phone.name_optional': 'Только для новых пользователей',
     
     // Language selector
     'lang.russian': 'Русский',
@@ -134,19 +122,6 @@ const translations = {
     'executors.empty': 'Executors list is empty',
     'executors.empty_desc': 'There are no executors in this category yet',
     
-    // Login
-    'login.title': 'Login',
-    'login.subtitle': 'Enter your credentials to login',
-    'login.email': 'Email',
-    'login.password': 'Password',
-    'login.submit': 'Login',
-    'login.cancel': 'Cancel',
-    'login.email_required': 'Email is required',
-    'login.email_invalid': 'Invalid email format',
-    'login.password_required': 'Password is required',
-    'login.password_min_length': 'Password must be at least 6 characters',
-    'login.success': 'Login successful!',
-    'login.error': 'Login error. Please check your credentials.',
     
     // Phone login
     'phone.title': 'Login with phone number',
@@ -165,8 +140,9 @@ const translations = {
     'phone.code_expires': 'Code is valid for 10 minutes',
     'phone.success': 'Phone authentication successful!',
     'phone.error': 'Phone authentication error',
-    'phone.switch_to_email': 'Login with email',
-    'phone.switch_to_phone': 'Login with phone',
+    'phone.country_code': 'Country code',
+    'phone.phone_number': 'Phone number',
+    'phone.name_optional': 'For new users only',
     
     // Language selector
     'lang.russian': 'Русский',
