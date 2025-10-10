@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/categories/**").permitAll()
                 .requestMatchers("/api/v1/users/by-category/**").permitAll() // Исполнители по категориям доступны всем
+                .requestMatchers("/api/v1/users/avatar/**").permitAll() // Аватарки доступны всем
                 .requestMatchers("/api/v1/app/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // Все остальные запросы требуют аутентификации

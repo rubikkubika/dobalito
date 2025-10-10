@@ -150,6 +150,14 @@ export const apiService = {
     return response.data;
   },
 
+  async checkCode(phone: string, code: string) {
+    const response = await api.post('/auth/check-code', {
+      phone,
+      code
+    });
+    return response.data;
+  },
+
   async checkCodeStatus(phone: string) {
     const response = await api.get(`/auth/check-code-status?phone=${encodeURIComponent(phone)}`);
     return response.data;
@@ -177,6 +185,29 @@ export const apiService = {
   // User categories
   async getUserCategories(userId: number) {
     const response = await api.get(`/users/${userId}/categories`);
+    return response.data;
+  },
+
+  // Avatar management
+  async uploadAvatar(userId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post(`/users/${userId}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  async deleteAvatar(userId: number) {
+    const response = await api.delete(`/users/${userId}/avatar`);
+    return response.data;
+  },
+
+  async updateProfile(userId: number, profileData: { name?: string; email?: string }) {
+    const response = await api.put(`/users/${userId}`, profileData);
     return response.data;
   },
 };

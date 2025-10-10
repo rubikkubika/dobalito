@@ -79,3 +79,7 @@ Thumbs.db
 # Docker
 .dockerignore
 .vercel
+
+# Uploads
+uploads/
+backend/uploads/

@@ -18,20 +18,11 @@ public class PhoneVerificationService {
     
     private static final int CODE_LENGTH = 6;
     private static final int CODE_EXPIRY_MINUTES = 10;
-    private static final int MAX_ATTEMPTS_PER_HOUR = 5;
     
     /**
      * Генерирует и сохраняет код верификации для номера телефона
      */
     public PhoneVerificationCode generateVerificationCode(String phone) {
-        // Проверяем лимит попыток за час
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        Long attemptsInLastHour = codeRepository.countAttemptsInLastHour(phone, oneHourAgo);
-        
-        if (attemptsInLastHour >= MAX_ATTEMPTS_PER_HOUR) {
-            throw new RuntimeException("Превышен лимит попыток. Попробуйте позже.");
-        }
-        
         // Деактивируем предыдущие коды для этого номера
         deactivatePreviousCodes(phone);
         
@@ -43,6 +34,23 @@ public class PhoneVerificationService {
         verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(CODE_EXPIRY_MINUTES));
         
         return codeRepository.save(verificationCode);
+    }
+    
+    /**
+     * Проверяет код верификации без его использования (для предварительной проверки)
+     */
+    public boolean checkCodeWithoutUsing(String phone, String code) {
+        LocalDateTime now = LocalDateTime.now();
+        Optional<PhoneVerificationCode> codeOptional = codeRepository.findByPhoneAndCode(phone, code, now);
+        
+        if (codeOptional.isEmpty()) {
+            return false;
+        }
+        
+        PhoneVerificationCode verificationCode = codeOptional.get();
+        
+        // Проверяем валидность кода без его использования
+        return verificationCode.isValid();
     }
     
     /**
