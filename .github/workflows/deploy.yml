@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   workflow_dispatch: # Позволяет запускать вручную
 
+# Trigger GitHub Actions
+
 env:
   REGISTRY_URL: 89.208.14.20:443
   BACKEND_IMAGE: dobalito-backend
