@@ -99,8 +99,8 @@ jobs:
           FRONTEND_IMAGE=retsko.ru/${{ env.FRONTEND_IMAGE }}:latest
           DATABASE_URL=jdbc:postgresql://postgres:5432/dobalito
           DB_USERNAME=postgres
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          DB_PASSWORD=password
+          JWT_SECRET=dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key
           JWT_EXPIRATION=3600000
           BACKEND_PORT=8080
           FRONTEND_PORT=3000
