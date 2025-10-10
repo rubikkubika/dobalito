@@ -8,7 +8,7 @@ on:
 # Trigger GitHub Actions
 
 env:
-  REGISTRY_URL: http://89.208.14.20:443
+  REGISTRY_URL: https://89.208.14.20
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
@@ -33,12 +33,18 @@ jobs:
         sudo systemctl restart docker
         sleep 5
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+        echo "DOCKER_HOST=tcp://localhost:2376" >> $GITHUB_ENV
     
     - name: Add self-signed certificate to trusted
       run: |
         echo | openssl s_client -connect 89.208.14.20:443 -servername 89.208.14.20 2>/dev/null | openssl x509 -outform PEM > /tmp/registry.crt
         sudo cp /tmp/registry.crt /usr/local/share/ca-certificates/
         sudo update-ca-certificates
+    
+    - name: Configure Docker client
+      run: |
+        mkdir -p ~/.docker
+        echo '{"insecure-registries":["89.208.14.20"]}' > ~/.docker/config.json
     
     - name: Login to Private Registry
       uses: docker/login-action@v3
