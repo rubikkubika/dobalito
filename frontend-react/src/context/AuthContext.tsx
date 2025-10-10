@@ -23,6 +23,7 @@ interface AuthContextType {
   loginWithPhone: (phone: string, code: string, name?: string) => Promise<void>;
   sendVerificationCode: (phone: string) => Promise<{ code: string }>;
   logout: () => void;
+  updateUser: (updatedUser: Partial<User>) => void;
   loading: boolean;
   error: string | null;
 }
@@ -146,12 +147,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUser: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...updatedUser });
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     loginWithPhone,
     sendVerificationCode,
     logout,
+    updateUser,
     loading,
     error
   };

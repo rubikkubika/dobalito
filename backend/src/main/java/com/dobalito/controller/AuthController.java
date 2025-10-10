@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -368,7 +369,7 @@ public class AuthController {
     public ResponseEntity<?> sendVerificationCode(@RequestBody String phoneJson) {
         try {
             // Парсим JSON
-            Map<String, String> request = objectMapper.readValue(phoneJson, Map.class);
+            Map<String, String> request = objectMapper.readValue(phoneJson, new TypeReference<Map<String, String>>() {});
             String phone = request.get("phone");
             
             if (phone == null || phone.trim().isEmpty()) {
@@ -490,6 +491,65 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of(
                 "success", false,
                 "message", "Ошибка авторизации: " + e.getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Проверка кода без авторизации (для определения нового пользователя)
+     */
+    @PostMapping("/check-code")
+    public ResponseEntity<?> checkCode(@RequestBody String checkJson) {
+        try {
+            // Парсим JSON
+            Map<String, String> request = objectMapper.readValue(checkJson, Map.class);
+            String phone = request.get("phone");
+            String code = request.get("code");
+            
+            if (phone == null || phone.trim().isEmpty()) {
+                return ResponseEntity.status(400).body(Map.of(
+                    "success", false,
+                    "message", "Номер телефона обязателен"
+                ));
+            }
+            
+            if (code == null || code.trim().isEmpty()) {
+                return ResponseEntity.status(400).body(Map.of(
+                    "success", false,
+                    "message", "Код верификации обязателен"
+                ));
+            }
+            
+            // Нормализуем номер телефона
+            String normalizedPhone = phoneVerificationService.normalizePhone(phone);
+            
+            // Проверяем код без его использования
+            boolean isValidCode = phoneVerificationService.checkCodeWithoutUsing(normalizedPhone, code);
+            
+            if (!isValidCode) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "success", false,
+                    "message", "Неверный или истекший код"
+                ));
+            }
+            
+            // Проверяем, существует ли пользователь
+            Optional<User> existingUser = userService.getUserByPhone(normalizedPhone);
+            boolean isNewUser = existingUser.isEmpty() || 
+                               (existingUser.isPresent() && (existingUser.get().getName() == null || existingUser.get().getName().trim().isEmpty()));
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Код верный",
+                "isNewUser", isNewUser,
+                "phone", normalizedPhone
+            ));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Ошибка сервера: " + e.getMessage()
             ));
         }
     }

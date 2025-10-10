@@ -7,12 +7,12 @@ import {
   Box,
   Typography,
   Alert,
-  CircularProgress,
-  Link
+  CircularProgress
 } from '@mui/material';
-import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/apiService';
 import PhoneInput from '../components/PhoneInput';
 
 const LoginPage: React.FC = () => {
@@ -28,15 +28,19 @@ const LoginPage: React.FC = () => {
   const [codeSent, setCodeSent] = useState(false);
   const [codeSentTo, setCodeSentTo] = useState('');
   const [displayCode, setDisplayCode] = useState(''); // Код для отображения на экране
+  const [codeVerified, setCodeVerified] = useState(false); // Код проверен
+  const [isNewUser, setIsNewUser] = useState(false); // Новый пользователь
+  const [codeCheckLoading, setCodeCheckLoading] = useState(false); // Загрузка проверки кода
   
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<{
     phone?: string;
     code?: string;
+    name?: string;
   }>({});
 
   const validatePhoneForm = () => {
-    const errors: { phone?: string; code?: string } = {};
+    const errors: { phone?: string; code?: string; name?: string } = {};
 
     if (!phone.trim()) {
       errors.phone = t('phone.phone_required');
@@ -46,6 +50,11 @@ const LoginPage: React.FC = () => {
 
     if (codeSent && !code.trim()) {
       errors.code = t('phone.code_required');
+    }
+
+    // Валидация имени только для новых пользователей после проверки кода
+    if (codeVerified && isNewUser && !name.trim()) {
+      errors.name = t('phone.name_required');
     }
 
     setValidationErrors(errors);
@@ -68,6 +77,36 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleCheckCode = async () => {
+    if (!code.trim()) {
+      setValidationErrors({ code: t('phone.code_required') });
+      return;
+    }
+
+    setCodeCheckLoading(true);
+    setValidationErrors({});
+
+    try {
+      const result = await apiService.checkCode(phone, code);
+      
+      if (result.success) {
+        setCodeVerified(true);
+        setIsNewUser(result.isNewUser);
+        
+        // Если пользователь не новый, сразу авторизуем
+        if (!result.isNewUser) {
+          await loginWithPhone(phone, code);
+          const from = location.state?.from?.pathname || '/profile';
+          navigate(from, { replace: true });
+        }
+      }
+    } catch (err: any) {
+      setValidationErrors({ code: err.message || 'Неверный код' });
+    } finally {
+      setCodeCheckLoading(false);
+    }
+  };
+
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -76,9 +115,12 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      await loginWithPhone(phone, code, name || undefined);
-      const from = location.state?.from?.pathname || '/profile';
-      navigate(from, { replace: true });
+      // Авторизуем только новых пользователей с именем
+      if (codeVerified && isNewUser) {
+        await loginWithPhone(phone, code, name);
+        const from = location.state?.from?.pathname || '/profile';
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       // Ошибка обрабатывается в AuthContext
     }
@@ -174,7 +216,7 @@ const LoginPage: React.FC = () => {
                   t('phone.send_code')
                 )}
               </Button>
-            ) : (
+            ) : !codeVerified ? (
               <>
                 <TextField
                   label={t('phone.code')}
@@ -184,26 +226,81 @@ const LoginPage: React.FC = () => {
                   error={!!validationErrors.code}
                   helperText={validationErrors.code || t('phone.code_expires')}
                   fullWidth
-                  disabled={loading}
+                  disabled={codeCheckLoading}
                   autoFocus
                   placeholder="123456"
                   inputProps={{ maxLength: 6 }}
                 />
 
-                <TextField
-                  label={t('phone.name')}
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                <Button
+                  onClick={handleCheckCode}
+                  variant="contained"
+                  disabled={codeCheckLoading}
                   fullWidth
+                  sx={{
+                    mt: 2,
+                    py: 1.5,
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    backgroundColor: '#4CAF50',
+                    '&:hover': {
+                      backgroundColor: '#45a049'
+                    }
+                  }}
+                >
+                  {codeCheckLoading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    'Проверить код'
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleResendCode}
+                  variant="outlined"
                   disabled={loading}
-                  helperText={t('phone.name_optional')}
-                />
+                  fullWidth
+                  sx={{
+                    mt: 1,
+                    py: 1,
+                    fontSize: '14px',
+                    color: '#4CAF50',
+                    borderColor: '#4CAF50',
+                    '&:hover': {
+                      borderColor: '#45a049',
+                      backgroundColor: 'rgba(76, 175, 80, 0.04)'
+                    }
+                  }}
+                >
+                  {t('phone.resend_code')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Код проверен успешно!
+                  {isNewUser ? ' Введите ваше имя для завершения регистрации.' : ' Добро пожаловать!'}
+                </Alert>
+
+                {isNewUser && (
+                  <TextField
+                    label={t('phone.name')}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={!!validationErrors.name}
+                    helperText={validationErrors.name || t('phone.name_required')}
+                    fullWidth
+                    disabled={loading}
+                    autoFocus
+                    placeholder="Введите ваше имя"
+                  />
+                )}
 
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={loading}
+                  disabled={loading || (isNewUser && !name.trim())}
                   fullWidth
                   sx={{
                     mt: 2,
@@ -219,7 +316,7 @@ const LoginPage: React.FC = () => {
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
-                    t('phone.verify_code')
+                    isNewUser ? 'Завершить регистрацию' : 'Войти'
                   )}
                 </Button>
 

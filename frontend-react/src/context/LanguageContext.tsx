@@ -74,7 +74,8 @@ const translations = {
     'phone.error': 'Ошибка авторизации по телефону',
     'phone.country_code': 'Код страны',
     'phone.phone_number': 'Номер телефона',
-    'phone.name_optional': 'Только для новых пользователей',
+      'phone.name_optional': 'Только для новых пользователей',
+      'phone.name_required': 'Имя обязательно для новых пользователей',
     
     // Language selector
     'lang.russian': 'Русский',
@@ -142,7 +143,8 @@ const translations = {
     'phone.error': 'Phone authentication error',
     'phone.country_code': 'Country code',
     'phone.phone_number': 'Phone number',
-    'phone.name_optional': 'For new users only',
+      'phone.name_optional': 'For new users only',
+      'phone.name_required': 'Name is required for new users',
     
     // Language selector
     'lang.russian': 'Русский',

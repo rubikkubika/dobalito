@@ -88,8 +88,8 @@ public class DataLoader implements CommandLineRunner {
         private void createSammyWithCategories() {
             // Проверяем, существует ли уже пользователь Sammy
             if (userRepository.findByEmail("sammy@example.com").isEmpty()) {
-                // Создаем пользователя Sammy с паролем "password123"
-                User sammy = new User("Sammy", "sammy@example.com", "password123", "https://example.com/avatars/sammy.jpg");
+                // Создаем пользователя Sammy с паролем "password123" и номером телефона
+                User sammy = new User("Sammy", "sammy@example.com", "password123", "71111111111", "https://example.com/avatars/sammy.jpg");
             
             // Находим категории "Серфинг" и "Аренда байка"
             Category surfingCategory = categoryRepository.findByName("Серфинг").orElse(null);
@@ -106,11 +106,19 @@ public class DataLoader implements CommandLineRunner {
             // Сохраняем пользователя
             userRepository.save(sammy);
             
-            System.out.println("Создан пользователь Sammy с категориями: " + 
+            System.out.println("Создан пользователь Sammy с номером телефона 71111111111 и категориями: " + 
                 (surfingCategory != null ? "Серфинг " : "") + 
                 (bikeRentalCategory != null ? "Аренда байка" : ""));
         } else {
-            System.out.println("Пользователь Sammy уже существует");
+            // Обновляем существующего пользователя Sammy, добавляя номер телефона
+            User existingSammy = userRepository.findByEmail("sammy@example.com").get();
+            if (existingSammy.getPhone() == null || existingSammy.getPhone().isEmpty()) {
+                existingSammy.setPhone("71111111111");
+                userRepository.save(existingSammy);
+                System.out.println("Добавлен номер телефона 71111111111 для существующего пользователя Sammy");
+            } else {
+                System.out.println("Пользователь Sammy уже существует с номером телефона: " + existingSammy.getPhone());
+            }
         }
     }
 }
