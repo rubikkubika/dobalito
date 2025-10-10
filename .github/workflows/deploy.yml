@@ -8,7 +8,7 @@ on:
 # Trigger GitHub Actions
 
 env:
-  REGISTRY_URL: https://89.208.14.20
+  REGISTRY_URL: http://89.208.14.20:443
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
@@ -33,7 +33,6 @@ jobs:
         sudo systemctl restart docker
         sleep 5
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
-        echo "DOCKER_TLS_VERIFY=0" >> $GITHUB_ENV
     
     - name: Add self-signed certificate to trusted
       run: |
