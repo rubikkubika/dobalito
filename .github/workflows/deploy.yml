@@ -111,7 +111,8 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         source: "env.production"
-        target: "/opt/dobalito/.env"
+        target: "/opt/dobalito/"
+        overwrite: true
     
     - name: Deploy to Server
       uses: appleboy/ssh-action@v1.0.3
@@ -121,6 +122,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /opt/dobalito
+          
+          # Переименовываем env.production в .env
+          mv env.production .env
           
           # Перезапускаем сервисы
           docker-compose -f docker/docker-compose.yml down
