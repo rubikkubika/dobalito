@@ -136,6 +136,28 @@ export const apiService = {
         return response.data;
       },
 
+      // Phone authentication
+      async sendVerificationCode(phone: string) {
+        const response = await api.post('/auth/send-verification-code', {
+          phone
+        });
+        return response.data;
+      },
+
+      async verifyCode(phone: string, code: string, name?: string) {
+        const response = await api.post('/auth/verify-code', {
+          phone,
+          code,
+          name
+        });
+        return response.data;
+      },
+
+      async checkCodeStatus(phone: string) {
+        const response = await api.get(`/auth/check-code-status?phone=${encodeURIComponent(phone)}`);
+        return response.data;
+      },
+
   async register(email: string, password: string, name: string) {
     const response = await api.post('/auth/register', {
       email,

@@ -5,6 +5,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  phone?: string;
   avatar?: string;
   categories?: Array<{
     id: number;
@@ -20,6 +21,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithPhone: (phone: string, code: string, name?: string) => Promise<void>;
+  sendVerificationCode: (phone: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   error: string | null;
@@ -67,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: response.user.id,
           name: response.user.name,
           email: response.user.email,
+          phone: response.user.phone || undefined,
           avatar: response.user.avatar || undefined,
           categories: [] // Пока без категорий, можно добавить позже
         };
@@ -85,6 +89,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const sendVerificationCode = async (phone: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiService.sendVerificationCode(phone);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Ошибка отправки кода');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Ошибка отправки кода верификации';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithPhone = async (phone: string, code: string, name?: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiService.verifyCode(phone, code, name);
+      
+      if (response.success) {
+        const userData: User = {
+          id: response.user.id,
+          name: response.user.name,
+          email: response.user.email,
+          phone: response.user.phone || undefined,
+          avatar: response.user.avatar || undefined,
+          categories: [] // Пока без категорий, можно добавить позже
+        };
+        
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        throw new Error(response.message || 'Ошибка авторизации');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Ошибка верификации кода';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -94,6 +148,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     login,
+    loginWithPhone,
+    sendVerificationCode,
     logout,
     loading,
     error
