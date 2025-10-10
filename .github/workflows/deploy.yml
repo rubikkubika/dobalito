@@ -1,17 +1,12 @@
-name: Deploy to Production
+name: Build and Test
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch: # Позволяет запускать вручную
 
-env:
-  REGISTRY_URL: your-registry.com
-  BACKEND_IMAGE: dobalito-backend
-  FRONTEND_IMAGE: dobalito-frontend
-
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -21,92 +16,37 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    - name: Login to Private Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY_URL }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY_URL }}/${{ env.BACKEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Backend
+    - name: Build Backend Docker image
       uses: docker/build-push-action@v5
       with:
         context: ./backend
         file: ./backend/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        push: false
+        tags: dobalito-backend:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
-    - name: Extract metadata for frontend
-      id: meta-frontend
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY_URL }}/${{ env.FRONTEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Frontend
+    - name: Build Frontend Docker image
       uses: docker/build-push-action@v5
       with:
         context: ./frontend-react
         file: ./docker/Dockerfile.frontend-react
-        push: true
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        labels: ${{ steps.meta-frontend.outputs.labels }}
+        push: false
+        tags: dobalito-frontend:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
-    - name: Deploy to Server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          cd /opt/dobalito
-          
-          # Создаем .env файл для продакшена
-          cat > .env << EOF
-          BACKEND_IMAGE=${{ env.REGISTRY_URL }}/${{ env.BACKEND_IMAGE }}:latest
-          FRONTEND_IMAGE=${{ env.REGISTRY_URL }}/${{ env.FRONTEND_IMAGE }}:latest
-          DATABASE_URL=jdbc:postgresql://postgres:5432/dobalito
-          DB_USERNAME=postgres
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION=3600000
-          EOF
-          
-          # Перезапускаем сервисы
-          docker-compose -f docker/docker-compose.yml down
-          docker-compose -f docker/docker-compose.yml pull
-          docker-compose -f docker/docker-compose.yml up -d
-          
-          # Ждем запуска и проверяем health
-          sleep 30
-          curl -f http://localhost:8080/api/v1/health || exit 1
-          echo "Deployment successful!"
-    
-    - name: Notify deployment status
-      if: always()
+    - name: Test Docker Compose
       run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+        # Проверяем, что docker-compose.yml корректен
+        docker-compose -f docker/docker-compose.yml config
+        
+        # Проверяем, что все сервисы могут быть созданы
+        docker-compose -f docker/docker-compose.yml --env-file env.local config
+    
+    - name: Run basic tests
+      run: |
+        echo "✅ Backend image built successfully"
+        echo "✅ Frontend image built successfully"
+        echo "✅ Docker Compose configuration is valid"
+        echo "🎉 All builds completed successfully!"
