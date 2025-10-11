@@ -8,7 +8,7 @@ on:
 # Trigger GitHub Actions
 
 env:
-  REGISTRY_URL: https://retsko.ru:5000
+  REGISTRY_URL: http://retsko.ru:5000
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
@@ -33,6 +33,13 @@ jobs:
     - name: Configure Docker BuildKit
       run: |
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+        echo "DOCKER_TLS_VERIFY=0" >> $GITHUB_ENV
+    
+    - name: Configure insecure registry
+      run: |
+        mkdir -p ~/.docker
+        echo '{"insecure-registries":["retsko.ru:5000"]}' > ~/.docker/config.json
+        sudo chown -R runner:runner ~/.docker
     
     
     
