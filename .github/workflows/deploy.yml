@@ -41,6 +41,9 @@ jobs:
           echo "Checking if dobalito database exists..."
           docker exec dobalito-postgres psql -U postgres -c "\l" | grep dobalito || echo "Database dobalito not found"
           
+          echo "Verifying database is empty before migrations..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt" || echo "No tables found (expected for empty database)"
+          
           echo "Installing Java and Maven for migration testing..."
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk maven
@@ -146,34 +149,29 @@ jobs:
           # Ждем запуска PostgreSQL
           sleep 15
           
-          # Создаем базу данных если она не существует
-          echo "=== Creating database ==="
+          # Создаем пустую базу данных для Flyway миграций
+          echo "=== Creating empty database for Flyway ==="
           docker exec dobalito-postgres psql -U postgres -c "CREATE DATABASE dobalito;" || echo "Database already exists or creation failed"
           
           # Проверяем что база создана
           docker exec dobalito-postgres psql -U postgres -c "\l" | grep dobalito || echo "Database not found"
           
-          # Выполняем скрипт инициализации
-          echo "=== Running database initialization script ==="
-          docker exec dobalito-postgres psql -U postgres -d dobalito -f /docker-entrypoint-initdb.d/init.sql || echo "Init script failed or already executed"
+          # НЕ выполняем init.sql - Flyway создаст схему, DataLoader загрузит данные
+          echo "=== Database ready for Flyway migrations ==="
           
-          # Детальная проверка базы данных
+          # Проверяем что база данных готова для миграций
           echo "=== Database verification ==="
           echo "List of databases:"
           docker exec dobalito-postgres psql -U postgres -c "\l"
           
-          echo "Tables in dobalito database:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
-          
-          echo "Sample data in app_info table:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT * FROM app_info;"
-          
           echo "Database connection test:"
           docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT current_database(), current_user, version();"
           
-          # Проверяем что таблица flyway_schema_history создана (это означает что Flyway работает)
-          echo "=== Checking Flyway setup ==="
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT COUNT(*) as migration_count FROM flyway_schema_history;" || echo "Flyway schema history table not found yet"
+          echo "Checking that database is empty (no tables yet):"
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt" || echo "No tables found (expected for empty database)"
+          
+          # Flyway таблицы будут созданы в test-migrations job
+          echo "=== Database ready for Flyway migrations ==="
           
           # Проверяем статус
           echo "=== Infrastructure status ==="
