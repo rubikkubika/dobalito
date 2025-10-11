@@ -57,6 +57,12 @@ jobs:
         echo "Creating test database..."
         PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE dobalito;" || echo "Database might already exist"
         
+        echo "Compiling project to ensure migrations are in target/classes..."
+        mvn compile
+        
+        echo "Checking if migrations are compiled correctly..."
+        ls -la target/classes/db/migration/ || echo "Migration files not found in target/classes"
+        
         echo "Running Flyway migrations..."
         mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=password
         
