@@ -13,8 +13,84 @@ env:
   FRONTEND_IMAGE: dobalito-frontend
 
 jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Prepare server directories
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          sudo mkdir -p /opt/dobalito/docker
+          sudo chown $USER:$USER /opt/dobalito
+    
+    - name: Copy docker-compose.prod.yml to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "docker/docker-compose.prod.yml"
+        target: "/opt/dobalito/docker/"
+        strip_components: 1
+    
+    - name: Copy nginx.conf to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "docker/nginx.conf"
+        target: "/opt/dobalito/docker/"
+        strip_components: 1
+    
+    - name: Copy env.production to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "env.production"
+        target: "/opt/dobalito/"
+        overwrite: true
+    
+    - name: Deploy infrastructure
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /opt/dobalito
+          
+          # Переименовываем env.production в .env
+          mv env.production .env
+          
+          # Останавливаем старые сервисы
+          docker-compose -f docker/docker-compose.prod.yml down || true
+          
+          # Запускаем только инфраструктуру (postgres, registry, nginx)
+          docker-compose -f docker/docker-compose.prod.yml up -d postgres registry nginx
+          
+          # Ждем запуска инфраструктуры
+          sleep 30
+          
+          # Проверяем статус
+          echo "=== Infrastructure status ==="
+          docker ps -a
+          
+          # Проверяем доступность registry
+          curl -f https://retsko.ru/v2/ || echo "Registry not ready yet"
+
   build-images:
     runs-on: ubuntu-latest
+    needs: deploy-infrastructure
     outputs:
       backend-image: ${{ steps.meta.outputs.tags }}
       frontend-image: ${{ steps.meta-frontend.outputs.tags }}
@@ -33,8 +109,6 @@ jobs:
     - name: Configure Docker BuildKit
       run: |
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
-    
-    
     
     - name: Login to Private Registry
       uses: docker/login-action@v3
@@ -135,7 +209,7 @@ jobs:
         target: "/opt/dobalito/"
         overwrite: true
     
-    - name: Deploy to Server
+    - name: Deploy applications
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
@@ -143,9 +217,6 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /opt/dobalito
-          
-          # Переименовываем env.production в .env
-          mv env.production .env
           
           # Настраиваем registry с аутентификацией
           echo "=== Setting up Docker Registry ==="
@@ -156,10 +227,8 @@ jobs:
           # Логинимся в приватный registry
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
           
-          # Перезапускаем сервисы с продакшен конфигурацией
-          docker-compose -f docker/docker-compose.prod.yml down
-          docker-compose -f docker/docker-compose.prod.yml pull
-          docker-compose -f docker/docker-compose.prod.yml up -d
+          # Запускаем приложения (backend и frontend)
+          docker-compose -f docker/docker-compose.prod.yml up -d backend frontend-react
           
           # Ждем запуска и проверяем health
           sleep 30
