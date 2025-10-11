@@ -75,6 +75,10 @@ jobs:
           # Останавливаем старые сервисы
           docker-compose -f docker/docker-compose.prod.yml down || true
           
+          # Останавливаем существующие сервисы на портах 80/443
+          sudo systemctl stop nginx || true
+          sudo pkill -f nginx || true
+          
           # Запускаем только инфраструктуру (postgres, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
           
