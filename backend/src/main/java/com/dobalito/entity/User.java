@@ -1,6 +1,7 @@
 package com.dobalito.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +28,9 @@ public class User {
     
     @Column(name = "phone", unique = true, length = 20)
     private String phone;
+    
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -63,6 +67,11 @@ public class User {
     public User(String name, String email, String password, String avatar) {
         this(name, email, password);
         this.avatar = avatar;
+    }
+    
+    public User(String name, String email, String password, String avatar, LocalDate dateOfBirth) {
+        this(name, email, password, avatar);
+        this.dateOfBirth = dateOfBirth;
     }
     
     public User(String name, String email, String password, String phone, String avatar) {
@@ -118,6 +127,14 @@ public class User {
     
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+    
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+    
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
     
     public LocalDateTime getCreatedAt() {
