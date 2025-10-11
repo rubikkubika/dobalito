@@ -75,8 +75,8 @@ jobs:
           # Останавливаем старые сервисы
           docker-compose -f docker/docker-compose.prod.yml down || true
           
-          # Запускаем только инфраструктуру (postgres, registry, nginx)
-          docker-compose -f docker/docker-compose.prod.yml up -d postgres registry nginx
+          # Запускаем только инфраструктуру (postgres, nginx)
+          docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
           
           # Ждем запуска инфраструктуры
           sleep 30
@@ -85,8 +85,8 @@ jobs:
           echo "=== Infrastructure status ==="
           docker ps -a
           
-          # Проверяем доступность registry
-          curl -f https://retsko.ru/v2/ || echo "Registry not ready yet"
+          # Проверяем доступность registry (уже запущен на сервере)
+          curl -f https://retsko.ru/v2/ || echo "Registry not accessible"
           
           # Проверяем аутентификацию registry
           echo "=== Testing registry authentication ==="
