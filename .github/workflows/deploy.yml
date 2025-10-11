@@ -115,6 +115,16 @@ jobs:
         target: "/opt/dobalito/docker/"
         strip_components: 1
     
+    - name: Copy nginx.conf to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "docker/nginx.conf"
+        target: "/opt/dobalito/docker/"
+        strip_components: 1
+    
     - name: Copy env.production to server
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -158,7 +168,8 @@ jobs:
           
           # Проверяем health check
           echo "=== Health check ==="
-          curl -f http://localhost:8080/api/v1/auth/test || echo "Health check failed"
+          curl -f http://localhost:8080/api/v1/auth/test || echo "Backend health check failed"
+          curl -f https://retsko.ru/api/v1/auth/test || echo "Nginx proxy health check failed"
           
           echo "Deployment successful!"
     
