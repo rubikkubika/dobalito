@@ -75,6 +75,12 @@ jobs:
           # Останавливаем старые сервисы
           docker-compose -f docker/docker-compose.prod.yml down || true
           
+          # Создаем директории для registry аутентификации
+          sudo mkdir -p /opt/dobalito/registry/auth
+          
+          # Создаем файл паролей для аутентификации ДО запуска registry
+          echo "${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }}" | sudo tee /opt/dobalito/registry/auth/htpasswd
+          
           # Запускаем только инфраструктуру (postgres, registry, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres registry nginx
           
@@ -87,6 +93,10 @@ jobs:
           
           # Проверяем доступность registry
           curl -f https://retsko.ru/v2/ || echo "Registry not ready yet"
+          
+          # Проверяем аутентификацию registry
+          echo "=== Testing registry authentication ==="
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin || echo "Registry auth failed"
 
   build-images:
     runs-on: ubuntu-latest
@@ -217,12 +227,6 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /opt/dobalito
-          
-          # Настраиваем registry с аутентификацией
-          echo "=== Setting up Docker Registry ==="
-          
-          # Создаем файл паролей для аутентификации
-          echo "${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }}" | docker exec -i dobalito-registry sh -c 'cat > /auth/htpasswd'
           
           # Логинимся в приватный registry
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin

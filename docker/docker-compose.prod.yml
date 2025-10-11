@@ -77,7 +77,7 @@ services:
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
     volumes:
-      - registry_auth:/auth
+      - ../registry/auth:/auth
       - registry_data:/var/lib/registry
     networks:
       - dobalito-network
@@ -109,7 +109,6 @@ services:
 volumes:
   postgres_data:
   uploads_data:
-  registry_auth:
   registry_data:
 
 networks:
