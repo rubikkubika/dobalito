@@ -26,7 +26,7 @@ services:
 
   # Spring Boot Backend
   backend:
-    image: ${BACKEND_IMAGE:-retsko.ru:5000/dobalito-backend:latest}
+    image: ${BACKEND_IMAGE:-retsko.ru/dobalito-backend:latest}
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -54,7 +54,7 @@ services:
 
   # React Frontend
   frontend-react:
-    image: ${FRONTEND_IMAGE:-retsko.ru:5000/dobalito-frontend:latest}
+    image: ${FRONTEND_IMAGE:-retsko.ru/dobalito-frontend:latest}
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
     environment:
       REACT_APP_API_URL: ${BACKEND_URL:-https://retsko.ru/api}
@@ -66,6 +66,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # Docker Registry
+  registry:
+    image: registry:2
+    container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-registry
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+    volumes:
+      - registry_auth:/auth
+      - registry_data:/var/lib/registry
+    networks:
+      - dobalito-network
+    restart: unless-stopped
 
   # Nginx Reverse Proxy
   nginx:
@@ -80,6 +96,7 @@ services:
     depends_on:
       - frontend-react
       - backend
+      - registry
     networks:
       - dobalito-network
     restart: unless-stopped
@@ -92,6 +109,8 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+  registry_auth:
+  registry_data:
 
 networks:
   dobalito-network:

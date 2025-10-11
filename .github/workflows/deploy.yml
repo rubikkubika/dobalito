@@ -8,7 +8,7 @@ on:
 # Trigger GitHub Actions
 
 env:
-  REGISTRY_URL: http://retsko.ru:5000
+  REGISTRY_URL: https://retsko.ru
   BACKEND_IMAGE: dobalito-backend
   FRONTEND_IMAGE: dobalito-frontend
 
@@ -33,13 +33,6 @@ jobs:
     - name: Configure Docker BuildKit
       run: |
         echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
-        echo "DOCKER_TLS_VERIFY=0" >> $GITHUB_ENV
-    
-    - name: Configure insecure registry
-      run: |
-        mkdir -p ~/.docker
-        echo '{"insecure-registries":["retsko.ru:5000"]}' > ~/.docker/config.json
-        sudo chown -R runner:runner ~/.docker
     
     
     
@@ -154,34 +147,14 @@ jobs:
           # Переименовываем env.production в .env
           mv env.production .env
           
-          # Настраиваем registry с аутентификацией на порту 5000
+          # Настраиваем registry с аутентификацией
           echo "=== Setting up Docker Registry ==="
-          docker stop registry || true
-          docker rm registry || true
-          
-          # Создаем директории для registry
-          sudo mkdir -p /opt/registry/auth /opt/registry/data
           
           # Создаем файл паролей для аутентификации
-          echo "${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }}" | sudo tee /opt/registry/auth/htpasswd
-          
-          # Запускаем registry с аутентификацией на порту 5000
-          docker run -d \
-            --name registry \
-            -p 5000:5000 \
-            -v /opt/registry/auth:/auth \
-            -v /opt/registry/data:/var/lib/registry \
-            -e "REGISTRY_AUTH=htpasswd" \
-            -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-            -e "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd" \
-            -e "REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry" \
-            registry:2
-          
-          # Ждем запуска registry
-          sleep 10
+          echo "${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }}" | docker exec -i dobalito-registry sh -c 'cat > /auth/htpasswd'
           
           # Логинимся в приватный registry
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru:5000 -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
           
           # Перезапускаем сервисы с продакшен конфигурацией
           docker-compose -f docker/docker-compose.prod.yml down
