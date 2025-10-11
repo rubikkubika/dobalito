@@ -147,7 +147,19 @@ jobs:
           
           # Ждем запуска и проверяем health
           sleep 30
-          curl -f http://localhost:8080/api/v1/auth/test || exit 1
+          
+          # Проверяем статус контейнеров
+          echo "=== Docker containers status ==="
+          docker ps -a
+          
+          # Проверяем логи backend
+          echo "=== Backend logs ==="
+          docker logs dobalito-backend --tail 50
+          
+          # Проверяем health check
+          echo "=== Health check ==="
+          curl -f http://localhost:8080/api/v1/auth/test || echo "Health check failed"
+          
           echo "Deployment successful!"
     
     - name: Notify deployment status
