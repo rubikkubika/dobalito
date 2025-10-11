@@ -72,12 +72,16 @@ jobs:
           # Переименовываем env.production в .env
           mv env.production .env
           
-          # Останавливаем старые сервисы
-          docker-compose -f docker/docker-compose.prod.yml down || true
+                 # Останавливаем старые сервисы и удаляем orphan контейнеры
+                 docker-compose -f docker/docker-compose.prod.yml down --remove-orphans || true
           
-          # Останавливаем существующие сервисы на портах 80/443
-          sudo systemctl stop nginx || true
-          sudo pkill -f nginx || true
+                 # Останавливаем существующие сервисы на портах 80/443
+                 sudo systemctl stop nginx || true
+                 sudo pkill -f nginx || true
+                 
+                 # Останавливаем registry контейнер, если он запущен отдельно
+                 docker stop dobalito-registry || true
+                 docker rm dobalito-registry || true
           
           # Запускаем только инфраструктуру (postgres, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
