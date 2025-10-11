@@ -87,18 +87,11 @@ jobs:
           docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
           
           # Ждем запуска инфраструктуры
-          sleep 30
+          sleep 15
           
           # Проверяем статус
           echo "=== Infrastructure status ==="
           docker ps -a
-          
-          # Проверяем доступность registry (уже запущен на сервере)
-          curl -f https://retsko.ru/v2/ || echo "Registry not accessible"
-          
-          # Проверяем аутентификацию registry
-          echo "=== Testing registry authentication ==="
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin || echo "Registry auth failed"
 
   build-images:
     runs-on: ubuntu-latest
