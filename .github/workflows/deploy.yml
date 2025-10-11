@@ -101,6 +101,13 @@ jobs:
           # Проверяем статус upstream в Nginx
           echo "=== Nginx upstream status ==="
           docker exec dobalito-nginx nginx -T | grep -A 10 "upstream registry_backend" || echo "Upstream config not found"
+          
+          # Проверяем подключение из Nginx контейнера к registry
+          echo "=== Testing registry connection from Nginx container ==="
+          docker exec dobalito-nginx curl -f http://172.17.0.1:5000/v2/ && echo "Registry accessible from Nginx via bridge IP" || echo "Registry NOT accessible from Nginx via bridge IP"
+          docker exec dobalito-nginx curl -f http://89.208.14.20:5000/v2/ && echo "Registry accessible from Nginx via host IP" || echo "Registry NOT accessible from Nginx via host IP"
+          
+          # Проверяем логи Nginx
           docker exec dobalito-nginx cat /var/log/nginx/registry_access.log 2>/dev/null || echo "Registry access log not found"
           docker exec dobalito-nginx cat /var/log/nginx/registry_error.log 2>/dev/null || echo "Registry error log not found"
           
