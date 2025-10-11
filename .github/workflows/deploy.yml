@@ -98,6 +98,12 @@ jobs:
           curl -f http://172.17.0.1:5000/v2/ && echo "Registry accessible via bridge IP" || echo "Registry not accessible via bridge IP"
           curl -f http://89.208.14.20:5000/v2/ && echo "Registry accessible via host IP" || echo "Registry not accessible via host IP"
           
+          # Проверяем статус upstream в Nginx
+          echo "=== Nginx upstream status ==="
+          docker exec dobalito-nginx nginx -T | grep -A 10 "upstream registry_backend" || echo "Upstream config not found"
+          docker exec dobalito-nginx cat /var/log/nginx/registry_access.log 2>/dev/null || echo "Registry access log not found"
+          docker exec dobalito-nginx cat /var/log/nginx/registry_error.log 2>/dev/null || echo "Registry error log not found"
+          
           # Проверяем, что registry работает
           echo "=== Registry status ==="
           docker ps --filter "name=registry" || echo "Registry not found in docker ps"
