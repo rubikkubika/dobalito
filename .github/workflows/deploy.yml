@@ -75,12 +75,6 @@ jobs:
           # Останавливаем старые сервисы
           docker-compose -f docker/docker-compose.prod.yml down || true
           
-          # Создаем директории для registry аутентификации
-          sudo mkdir -p /opt/dobalito/registry/auth
-          
-          # Создаем файл паролей для аутентификации ДО запуска registry
-          echo "${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }}" | sudo tee /opt/dobalito/registry/auth/htpasswd
-          
           # Запускаем только инфраструктуру (postgres, registry, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres registry nginx
           
