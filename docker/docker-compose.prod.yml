@@ -71,17 +71,13 @@ services:
   nginx:
     image: nginx:alpine
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-nginx
-    ports:
-      - "80:80"
-      - "443:443"
+    network_mode: host
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend-react
       - backend
-    networks:
-      - dobalito-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
