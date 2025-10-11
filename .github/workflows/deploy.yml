@@ -81,8 +81,19 @@ jobs:
           # Запускаем только инфраструктуру (postgres, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
           
-          # Ждем запуска инфраструктуры
-          sleep 10
+          # Ждем запуска PostgreSQL
+          sleep 15
+          
+          # Создаем базу данных если она не существует
+          echo "=== Creating database ==="
+          docker exec dobalito-postgres psql -U postgres -c "CREATE DATABASE dobalito;" || echo "Database already exists or creation failed"
+          
+          # Проверяем что база создана
+          docker exec dobalito-postgres psql -U postgres -c "\l" | grep dobalito || echo "Database not found"
+          
+          # Выполняем скрипт инициализации
+          echo "=== Running database initialization script ==="
+          docker exec dobalito-postgres psql -U postgres -d dobalito -f /docker-entrypoint-initdb.d/init.sql || echo "Init script failed or already executed"
           
           # Проверяем статус
           echo "=== Infrastructure status ==="
