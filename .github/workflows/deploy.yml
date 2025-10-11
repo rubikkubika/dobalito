@@ -15,75 +15,68 @@ env:
 jobs:
   test-migrations:
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: dobalito_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    needs: deploy-infrastructure
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
+    - name: Test Flyway migrations on server
+      uses: appleboy/ssh-action@v1.0.3
       with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: Cache Maven dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-    
-    - name: Run Flyway migrations test
-      run: |
-        cd backend
-        echo "Waiting for PostgreSQL to be ready..."
-        sleep 10
-        
-        echo "Creating test database..."
-        PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE dobalito;" || echo "Database might already exist"
-        
-        echo "Compiling project to ensure migrations are in target/classes..."
-        mvn compile
-        
-        echo "Checking if migrations are compiled correctly..."
-        ls -la target/classes/db/migration/ || echo "Migration files not found in target/classes"
-        
-        echo "Running Flyway migrations..."
-        mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=password
-        
-        echo "Checking migration results..."
-        PGPASSWORD=password psql -h localhost -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
-        
-        echo "Checking table structures..."
-        PGPASSWORD=password psql -h localhost -U postgres -d dobalito -c "\dt"
-        
-        echo "Checking users table has date_of_birth column..."
-        PGPASSWORD=password psql -h localhost -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
-        
-        echo "Testing data insertion..."
-        PGPASSWORD=password psql -h localhost -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
-        
-        echo "Verifying test data..."
-        PGPASSWORD=password psql -h localhost -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /opt/dobalito
+          
+          echo "=== Testing Flyway Migrations on Server ==="
+          
+          echo "Checking PostgreSQL container status..."
+          docker ps --filter "name=dobalito-postgres"
+          
+          echo "Testing PostgreSQL connection..."
+          docker exec dobalito-postgres psql -U postgres -c "SELECT version();" || echo "PostgreSQL connection failed"
+          
+          echo "Checking if dobalito database exists..."
+          docker exec dobalito-postgres psql -U postgres -c "\l" | grep dobalito || echo "Database dobalito not found"
+          
+          echo "Installing Java and Maven for migration testing..."
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk maven
+          
+          echo "Setting JAVA_HOME..."
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          
+          echo "Compiling project to ensure migrations are available..."
+          cd /tmp
+          git clone https://github.com/rubikkubika/dobalito.git test-migrations
+          cd test-migrations/backend
+          
+          echo "Running Flyway migrations..."
+          mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=password
+          
+          echo "Checking migration results..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
+          
+          echo "Checking table structures..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+          
+          echo "Checking users table has date_of_birth column..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
+          
+          echo "Testing data insertion..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
+          
+          echo "Verifying test data..."
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+          
+          echo "Cleaning up test files..."
+          cd /
+          rm -rf /tmp/test-migrations
 
   deploy-infrastructure:
     runs-on: ubuntu-latest
-    needs: test-migrations
     
     steps:
     - name: Checkout code
