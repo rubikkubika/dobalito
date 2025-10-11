@@ -171,7 +171,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  deploy-to-server:
+  deploy-applications:
     runs-on: ubuntu-latest
     needs: build-images
     
@@ -179,47 +179,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Prepare server directories
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          sudo mkdir -p /opt/dobalito/docker
-          sudo chown $USER:$USER /opt/dobalito
-    
-    - name: Copy docker-compose.prod.yml to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "docker/docker-compose.prod.yml"
-        target: "/opt/dobalito/docker/"
-        strip_components: 1
-    
-    - name: Copy nginx.conf to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "docker/nginx.conf"
-        target: "/opt/dobalito/docker/"
-        strip_components: 1
-    
-    - name: Copy env.production to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "env.production"
-        target: "/opt/dobalito/"
-        overwrite: true
-    
-    - name: Deploy applications
+    - name: Deploy applications to server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
