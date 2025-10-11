@@ -95,6 +95,20 @@ jobs:
           echo "=== Running database initialization script ==="
           docker exec dobalito-postgres psql -U postgres -d dobalito -f /docker-entrypoint-initdb.d/init.sql || echo "Init script failed or already executed"
           
+          # Детальная проверка базы данных
+          echo "=== Database verification ==="
+          echo "List of databases:"
+          docker exec dobalito-postgres psql -U postgres -c "\l"
+          
+          echo "Tables in dobalito database:"
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+          
+          echo "Sample data in app_info table:"
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT * FROM app_info;"
+          
+          echo "Database connection test:"
+          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT current_database(), current_user, version();"
+          
           # Проверяем статус
           echo "=== Infrastructure status ==="
           docker ps -a
