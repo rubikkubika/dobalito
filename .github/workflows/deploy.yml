@@ -88,6 +88,16 @@ jobs:
           echo "=== Infrastructure status ==="
           docker ps -a
           
+          # Диагностика сети для registry
+          echo "=== Network diagnostics ==="
+          echo "Docker bridge IP:"
+          docker network inspect bridge | grep Gateway || echo "Gateway not found"
+          echo "Host IP addresses:"
+          ip route | grep default | awk '{print $3}' || echo "Default route not found"
+          echo "Registry connectivity test:"
+          curl -f http://172.17.0.1:5000/v2/ && echo "Registry accessible via bridge IP" || echo "Registry not accessible via bridge IP"
+          curl -f http://89.208.14.20:5000/v2/ && echo "Registry accessible via host IP" || echo "Registry not accessible via host IP"
+          
           # Проверяем, что registry работает
           echo "=== Registry status ==="
           docker ps --filter "name=registry" || echo "Registry not found in docker ps"
