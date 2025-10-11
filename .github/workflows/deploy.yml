@@ -95,17 +95,26 @@ jobs:
           echo "Host IP addresses:"
           ip route | grep default | awk '{print $3}' || echo "Default route not found"
           echo "Registry connectivity test:"
-          curl -f http://172.17.0.1:5000/v2/ && echo "Registry accessible via bridge IP" || echo "Registry not accessible via bridge IP"
-          curl -f http://89.208.14.20:5000/v2/ && echo "Registry accessible via host IP" || echo "Registry not accessible via host IP"
+          curl -u admin:root http://172.17.0.1:5000/v2/ && echo "Registry accessible via bridge IP" || echo "Registry not accessible via bridge IP"
+          curl -u admin:root http://89.208.14.20:5000/v2/ && echo "Registry accessible via host IP" || echo "Registry not accessible via host IP"
           
           # Проверяем статус upstream в Nginx
           echo "=== Nginx upstream status ==="
           docker exec dobalito-nginx nginx -T | grep -A 10 "upstream registry_backend" || echo "Upstream config not found"
           
-          # Проверяем подключение из Nginx контейнера к registry
+          # Ждем стабилизации Nginx
+          echo "=== Waiting for Nginx to stabilize ==="
+          sleep 15
+          docker ps --filter "name=dobalito-nginx"
+          
+          # Проверяем логи Nginx для диагностики
+          echo "=== Nginx logs ==="
+          docker logs dobalito-nginx --tail 20
+          
+          # Проверяем подключение из Nginx контейнера к registry (с аутентификацией)
           echo "=== Testing registry connection from Nginx container ==="
-          docker exec dobalito-nginx curl -f http://172.17.0.1:5000/v2/ && echo "Registry accessible from Nginx via bridge IP" || echo "Registry NOT accessible from Nginx via bridge IP"
-          docker exec dobalito-nginx curl -f http://89.208.14.20:5000/v2/ && echo "Registry accessible from Nginx via host IP" || echo "Registry NOT accessible from Nginx via host IP"
+          docker exec dobalito-nginx curl -u admin:root http://172.17.0.1:5000/v2/ && echo "Registry accessible from Nginx via bridge IP" || echo "Registry NOT accessible from Nginx via bridge IP"
+          docker exec dobalito-nginx curl -u admin:root http://89.208.14.20:5000/v2/ && echo "Registry accessible from Nginx via host IP" || echo "Registry NOT accessible from Nginx via host IP"
           
           # Проверяем логи Nginx
           docker exec dobalito-nginx cat /var/log/nginx/registry_access.log 2>/dev/null || echo "Registry access log not found"
@@ -114,7 +123,7 @@ jobs:
           # Проверяем, что registry работает
           echo "=== Registry status ==="
           docker ps --filter "name=registry" || echo "Registry not found in docker ps"
-          curl -f https://retsko.ru/v2/ && echo "Registry accessible via HTTPS" || echo "Registry not accessible via HTTPS"
+          curl -u admin:root https://retsko.ru/v2/ && echo "Registry accessible via HTTPS" || echo "Registry not accessible via HTTPS"
 
   build-images:
     runs-on: ubuntu-latest
