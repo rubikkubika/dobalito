@@ -72,8 +72,11 @@ jobs:
           # Переименовываем env.production в .env
           mv env.production .env
           
-          # Останавливаем старые сервисы и удаляем orphan контейнеры
-          docker-compose -f docker/docker-compose.prod.yml down --remove-orphans || true
+          # Останавливаем только наши сервисы, НЕ трогаем registry
+          docker-compose -f docker/docker-compose.prod.yml down || true
+          
+          # Удаляем только orphan контейнеры НАШЕГО проекта (не registry)
+          docker ps -a --filter "name=dobalito-" --filter "status=exited" -q | xargs -r docker rm || true
           
           # Запускаем только инфраструктуру (postgres, nginx)
           docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
@@ -84,6 +87,11 @@ jobs:
           # Проверяем статус
           echo "=== Infrastructure status ==="
           docker ps -a
+          
+          # Проверяем, что registry работает
+          echo "=== Registry status ==="
+          docker ps --filter "name=registry" || echo "Registry not found in docker ps"
+          curl -f https://retsko.ru/v2/ && echo "Registry accessible via HTTPS" || echo "Registry not accessible via HTTPS"
 
   build-images:
     runs-on: ubuntu-latest
