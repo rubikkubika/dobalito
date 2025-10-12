@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import DesignsPage from './pages/DesignsPage';
 import ExecutorsPage from './pages/ExecutorsPage';
+import SearchPage from './pages/SearchPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -127,6 +128,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/home" replace />} />
                   <Route path="/home" element={<HomePage />} />
+                  <Route path="/search" element={<SearchPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/executors/:category" element={<ExecutorsPage />} />
                   <Route path="/profile" element={

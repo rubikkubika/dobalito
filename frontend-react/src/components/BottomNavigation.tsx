@@ -1,6 +1,6 @@
 import React from 'react';
 import { BottomNavigation as MuiBottomNavigation, BottomNavigationAction, Box } from '@mui/material';
-import { Home, Search, Person, Work } from '@mui/icons-material';
+import { Home, Search, Person } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -14,7 +14,6 @@ const BottomNavigation: React.FC = () => {
     if (path === '/' || path === '/home') return 0;
     if (path.startsWith('/search')) return 1;
     if (path.startsWith('/profile')) return 2;
-    if (path.startsWith('/executors')) return 3;
     return 0;
   };
 
@@ -28,9 +27,6 @@ const BottomNavigation: React.FC = () => {
         break;
       case 2:
         navigate('/profile');
-        break;
-      case 3:
-        navigate('/executors'); // Navigate to executors page
         break;
     }
   };
@@ -73,10 +69,6 @@ const BottomNavigation: React.FC = () => {
         <BottomNavigationAction
           label={t('nav.profile')}
           icon={<Person />}
-        />
-        <BottomNavigationAction
-          label={t('nav.for_executors')}
-          icon={<Work />}
         />
       </MuiBottomNavigation>
     </Box>

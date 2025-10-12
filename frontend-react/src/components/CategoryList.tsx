@@ -13,6 +13,7 @@ interface CategoryListProps {
   error: string | null;
   onCategoryClick: (category: Category) => void;
   title?: string;
+  activeCategory?: string;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -20,7 +21,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
   loading,
   error,
   onCategoryClick,
-  title = 'Категории'
+  title = 'Категории',
+  activeCategory
 }) => {
   if (loading) {
     return (
@@ -62,36 +64,39 @@ const CategoryList: React.FC<CategoryListProps> = ({
         gap: 1, 
         flexWrap: { xs: 'wrap', sm: 'nowrap' } 
       }}>
-        {categories.map((category) => (
-          <Box
-            key={category.id}
-            onClick={() => onCategoryClick(category)}
-            sx={{
-              p: { xs: 1, sm: 1.5 },
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              backgroundColor: 'transparent',
-              color: '#000000',
-              fontWeight: 400,
-              fontSize: { xs: '0.9rem', sm: '1rem' },
-              textAlign: { xs: 'center', sm: 'left' },
-              minWidth: { xs: 'calc(50% - 4px)', sm: 'auto' },
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              border: `1px solid ${category.color}20`,
-              '&:hover': {
-                backgroundColor: `${category.color}10`,
-                borderColor: category.color,
-                transform: 'translateY(-1px)',
-              }
-            }}
-          >
-            <span style={{ fontSize: '1.2em' }}>{category.icon}</span>
-            <span>{category.name}</span>
-          </Box>
-        ))}
+        {categories.map((category) => {
+          const isActive = activeCategory === category.name;
+          return (
+            <Box
+              key={category.id}
+              onClick={() => onCategoryClick(category)}
+              sx={{
+                p: { xs: 1, sm: 1.5 },
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: isActive ? `${category.color}20` : 'transparent',
+                color: isActive ? category.color : '#000000',
+                fontWeight: isActive ? 600 : 400,
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                textAlign: { xs: 'center', sm: 'left' },
+                minWidth: { xs: 'calc(50% - 4px)', sm: 'auto' },
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                border: isActive ? `2px solid ${category.color}` : `1px solid ${category.color}20`,
+                '&:hover': {
+                  backgroundColor: `${category.color}10`,
+                  borderColor: category.color,
+                  transform: 'translateY(-1px)',
+                }
+              }}
+            >
+              <span style={{ fontSize: '1.2em' }}>{category.icon}</span>
+              <span>{category.name}</span>
+            </Box>
+          );
+        })}
       </Box>
     </Box>
   );

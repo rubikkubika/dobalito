@@ -20,6 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { apiService } from '../services/apiService';
 import { getResponsiveValue } from '../utils/helpers';
 import { useCategories } from '../hooks/useCategories';
+import CategoryList from '../components/CategoryList';
 
 const ExecutorsPage: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -35,8 +36,8 @@ const ExecutorsPage: React.FC = () => {
   
   const { categories, loading: categoriesLoading } = useCategories(true, getBackendLanguage());
 
-  const handleCategoryClick = (categoryName: string) => {
-    navigate(`/executors/${categoryName}`);
+  const handleCategoryClick = (category: any) => {
+    navigate(`/executors/${category.name}`);
   };
 
   useEffect(() => {
@@ -87,56 +88,39 @@ const ExecutorsPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: getResponsiveValue(2, 3, 4) }}>
-        {/* Two-column layout */}
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Categories Sidebar */}
-          <Box sx={{ width: 250, flexShrink: 0 }}>
-            <Typography
-              variant="h6"
-              component="h2"
-              gutterBottom
-              sx={{
-                mb: 2,
-                fontSize: getResponsiveValue('1rem', '1.2rem', '1.4rem'),
-                fontWeight: 600,
-                color: '#000000',
-              }}
-            >
-              {t('home.categories')}
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {categoriesLoading ? (
-                <Typography>Загрузка категорий...</Typography>
-              ) : (
-                categories.map((categoryItem) => (
-                  <Box
-                    key={categoryItem.id}
-                    onClick={() => handleCategoryClick(categoryItem.name)}
-                    sx={{
-                      p: 2,
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      backgroundColor: category === categoryItem.name ? '#E3F2FD' : 'transparent',
-                      color: category === categoryItem.name ? '#1976D2' : '#000000',
-                      fontWeight: category === categoryItem.name ? 600 : 400,
-                      border: category === categoryItem.name ? '1px solid #1976D2' : '1px solid transparent',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: '#F5F5F5',
-                      },
-                    }}
-                  >
-                    {categoryItem.name}
-                  </Box>
-                ))
-              )}
-            </Box>
+    <Container maxWidth="lg" sx={{ px: 0, pt: 2 }}>
+      {/* Two-column layout */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: { xs: 2, sm: 3 }, 
+        alignItems: 'flex-start',
+        flexDirection: 'row' // Всегда горизонтально
+      }}>
+        {/* Categories Sidebar */}
+        <Box sx={{ 
+          minWidth: { xs: 180, sm: 200, md: 250 }, 
+          width: { xs: 180, sm: 200, md: 250 },
+          backgroundColor: '#FFFFFF', 
+          borderRadius: '16px', 
+          border: '1px solid #E0E0E0',
+          p: 2,
+          flexShrink: 0
+        }}>
+            <CategoryList
+              categories={categories}
+              loading={categoriesLoading}
+              error={null}
+              onCategoryClick={handleCategoryClick}
+              title={t('home.categories')}
+              activeCategory={category}
+            />
           </Box>
 
           {/* Main Content */}
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ 
+            flex: 1,
+            minWidth: 0 // Позволяет контенту сжиматься
+          }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Button
@@ -228,7 +212,6 @@ const ExecutorsPage: React.FC = () => {
             )}
           </Box>
         </Box>
-      </Box>
     </Container>
   );
 };

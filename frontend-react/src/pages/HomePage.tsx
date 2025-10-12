@@ -127,13 +127,13 @@ const HomePage: React.FC = () => {
       }}>
         {/* Categories Sidebar */}
         <Box sx={{ 
-          minWidth: { xs: '100%', md: 250 }, 
-          width: { xs: '100%', md: 'auto' },
+          minWidth: { md: 250 }, 
+          width: { md: 'auto' },
           backgroundColor: '#FFFFFF', 
           borderRadius: '16px', 
           border: '1px solid #E0E0E0',
           p: 2,
-          order: { xs: 2, md: 1 }
+          display: { xs: 'none', md: 'block' }
         }}>
           <CategoryList
             categories={categories}
@@ -146,8 +146,7 @@ const HomePage: React.FC = () => {
 
         {/* Main Content */}
         <Box sx={{ 
-          flex: 1, 
-          order: { xs: 1, md: 2 },
+          flex: 1,
           width: { xs: '100%', md: 'auto' }
         }}>
           {/* Welcome Section - matching Flutter design */}

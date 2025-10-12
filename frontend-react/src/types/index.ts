@@ -38,3 +38,14 @@ export interface Category {
   createdAt: string;
   updatedAt: string | null;
 }
+
+export interface Executor {
+  id: number;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  rating?: number;
+  description?: string;
+  skills?: string[];
+}
