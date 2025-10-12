@@ -339,17 +339,23 @@ docs/
 **ALWAYS update commit information when making commits or PRs to main branch**
 
 ### Required commit info updates:
+- ✅ Update `commit` file in project root with new 5-character hash
 - ✅ Update hardcoded commit hash in `backend/src/main/java/com/dobalito/controller/AppController.java` method `commitInfo()`
 - ✅ Update hardcoded commit hash in `frontend-react/src/components/CommitInfo.tsx` component
 - ✅ Ensure commit hash is visible on frontend homepage
 - ✅ Ensure commit hash is accessible via backend API `/api/v1/info/commit`
+
+### Commit file location:
+```
+commit  # ← UPDATE THIS FILE with new 5-character hash
+```
 
 ### Backend commit info location:
 ```java
 @GetMapping("/info/commit")
 public ResponseEntity<?> commitInfo() {
     return ResponseEntity.ok(Map.of(
-        "commit", "e611dba"  // ← UPDATE THIS
+        "commit", "a7b3c"  // ← UPDATE THIS
     ));
 }
 ```
@@ -358,7 +364,7 @@ public ResponseEntity<?> commitInfo() {
 ```typescript
 const CommitInfo: React.FC<CommitInfoProps> = ({ className }) => {
   // Hardcoded commit info - update this with each commit/PR to main
-  const commitHash = "e611dba";  // ← UPDATE THIS
+  const commitHash = "a7b3c";  // ← UPDATE THIS
 ```
 
 ### Frontend commit display:
@@ -373,11 +379,12 @@ const CommitInfo: React.FC<CommitInfoProps> = ({ className }) => {
 - ✅ Use hardcoded value for simplicity
 
 ### Update process:
-1. **Get current commit hash**: `git log --oneline -1`
-2. **Update backend**: Modify `AppController.java` commitInfo() method
-3. **Update frontend**: Modify `CommitInfo.tsx` component
-4. **Test both**: Verify API endpoint and frontend display
-5. **Commit changes**: Include commit hash update in commit message
+1. **Generate new 5-character hash** (random alphanumeric)
+2. **Update commit file** in project root
+3. **Update backend**: Modify `AppController.java` commitInfo() method
+4. **Update frontend**: Modify `CommitInfo.tsx` component
+5. **Test both**: Verify API endpoint and frontend display
+6. **Commit changes**: Include commit hash update in commit message
 
 ### Enforcement:
 - ALWAYS update commit information when committing to main branch
