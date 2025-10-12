@@ -56,8 +56,6 @@ services:
   frontend-react:
     image: ${FRONTEND_IMAGE:-retsko.ru/dobalito-frontend:latest}
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-frontend-react
-    environment:
-      REACT_APP_API_URL: ${BACKEND_URL:-http://retsko.ru:8080}
     depends_on:
       - backend
     networks:

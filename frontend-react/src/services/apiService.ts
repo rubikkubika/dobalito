@@ -1,7 +1,31 @@
 // API service for communicating with backend
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+// Умная логика определения API URL
+const getApiBaseUrl = () => {
+  // Если мы в браузере (не в SSR)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // Локальная разработка
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8080';
+    }
+    
+    // Продакшн сервер
+    if (hostname === 'retsko.ru') {
+      return 'https://retsko.ru';
+    }
+    
+    // Для других случаев используем текущий хост
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  
+  // Fallback для SSR или других случаев
+  return process.env.REACT_APP_API_URL || 'http://localhost:8080';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
