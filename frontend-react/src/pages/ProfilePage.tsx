@@ -181,7 +181,7 @@ const ProfilePage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Box sx={{ position: 'relative', mr: 3 }}>
             <Avatar
-              src={user.avatar ? `${apiService.getApiBaseUrl()}${user.avatar}` : undefined}
+              src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${apiService.getApiBaseUrl()}${user.avatar}`) : undefined}
               sx={{
                 width: 80,
                 height: 80,

@@ -191,7 +191,7 @@ const ExecutorsPage: React.FC = () => {
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar 
-                          src={executor.avatar ? `${apiService.getApiBaseUrl()}${executor.avatar}` : undefined}
+                          src={executor.avatar ? (executor.avatar.startsWith('http') ? executor.avatar : `${apiService.getApiBaseUrl()}${executor.avatar}`) : undefined}
                           sx={{ 
                             mr: 2, 
                             bgcolor: '#2196F3',

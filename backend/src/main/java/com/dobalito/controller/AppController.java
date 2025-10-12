@@ -32,7 +32,7 @@ public class AppController {
     @GetMapping("/info/commit")
     public ResponseEntity<?> commitInfo() {
         return ResponseEntity.ok(Map.of(
-            "commit", "k7m9x"
+            "commit", "m8n4k"
         ));
     }
 }
