@@ -146,7 +146,7 @@ public class UserService {
         
         // Обновляем аватарку пользователя
         User user = optionalUser.get();
-        String avatarUrl = "/api/v1/users/avatar/" + filename;
+        String avatarUrl = getAvatarUrl(filename);
         user.setAvatar(avatarUrl);
         userRepository.save(user);
         
@@ -193,6 +193,25 @@ public class UserService {
      */
     public List<User> getAllExecutors() {
         return userRepository.findAllUsers();
+    }
+    
+    /**
+     * Генерирует правильный URL для аватарки в зависимости от окружения
+     */
+    private String getAvatarUrl(String filename) {
+        // Получаем базовый URL из переменных окружения или используем относительный путь
+        String baseUrl = System.getenv("APP_BASE_URL");
+        
+        if (baseUrl != null && !baseUrl.isEmpty()) {
+            // Убираем trailing slash если есть
+            if (baseUrl.endsWith("/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+            }
+            return baseUrl + "/api/v1/users/avatar/" + filename;
+        } else {
+            // Для локальной разработки используем относительный путь
+            return "/api/v1/users/avatar/" + filename;
+        }
     }
 }
 
