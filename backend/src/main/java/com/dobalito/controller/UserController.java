@@ -136,15 +136,51 @@ public class UserController {
             Resource resource = new UrlResource(filePath.toUri());
             
             if (resource.exists() && resource.isReadable()) {
+                // Определяем Content-Type по расширению файла
+                MediaType contentType = getContentTypeFromFilename(filename);
+                
                 return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
+                    .contentType(contentType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=3600") // Кеширование на 1 час
                     .body(resource);
             } else {
+                // Логируем отсутствие файла для диагностики
+                System.out.println("Avatar file not found: " + filePath);
                 return ResponseEntity.notFound().build();
             }
+        } catch (IllegalArgumentException e) {
+            // Некорректное имя файла
+            System.out.println("Invalid filename: " + filename + ", error: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            // Другие ошибки
+            System.out.println("Error serving avatar: " + filename + ", error: " + e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * Определяет Content-Type по расширению файла
+     */
+    private MediaType getContentTypeFromFilename(String filename) {
+        if (filename == null) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
+        
+        String extension = filename.toLowerCase();
+        if (extension.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        } else if (extension.endsWith(".jpg") || extension.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (extension.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        } else if (extension.endsWith(".webp")) {
+            return MediaType.parseMediaType("image/webp");
+        } else if (extension.endsWith(".svg")) {
+            return MediaType.parseMediaType("image/svg+xml");
+        } else {
+            return MediaType.APPLICATION_OCTET_STREAM;
         }
     }
     

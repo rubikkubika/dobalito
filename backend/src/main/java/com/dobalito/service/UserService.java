@@ -171,7 +171,26 @@ public class UserService {
      * Получить путь к файлу аватарки
      */
     public Path getAvatarPath(String filename) {
-        return Paths.get(UPLOAD_DIR + filename).toAbsolutePath();
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new IllegalArgumentException("Filename cannot be null or empty");
+        }
+        
+        // Проверяем безопасность имени файла (защита от path traversal)
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            throw new IllegalArgumentException("Invalid filename: " + filename);
+        }
+        
+        // Создаем директорию если она не существует
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        try {
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create upload directory", e);
+        }
+        
+        return uploadPath.resolve(filename).toAbsolutePath();
     }
     
     /**
