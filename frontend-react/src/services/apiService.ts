@@ -77,6 +77,11 @@ api.interceptors.response.use(
 );
 
 export const apiService = {
+  // Get API base URL dynamically
+  getApiBaseUrl() {
+    return API_BASE_URL;
+  },
+
   // Health check
   async getHealth() {
     const response = await api.get('/health');
