@@ -281,7 +281,31 @@ public class AuthController {
                 ));
             }
             
-            User user = (User) authentication.getPrincipal();
+            User user = null;
+            
+            // Пытаемся получить пользователя из principal
+            if (authentication.getPrincipal() instanceof User) {
+                user = (User) authentication.getPrincipal();
+            }
+            // Если в principal строка (phone), получаем пользователя из details
+            else if (authentication.getDetails() instanceof User) {
+                user = (User) authentication.getDetails();
+            }
+            // Если в principal phone, ищем пользователя по телефону
+            else if (authentication.getPrincipal() instanceof String) {
+                String phone = (String) authentication.getPrincipal();
+                var userOptional = userService.getUserByPhone(phone);
+                if (userOptional.isPresent()) {
+                    user = userOptional.get();
+                }
+            }
+            
+            if (user == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "success", false,
+                    "message", "Пользователь не найден"
+                ));
+            }
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -296,6 +320,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
+            logger.error("Ошибка в getCurrentUser: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
                 "success", false,
                 "message", "Ошибка сервера: " + e.getMessage()

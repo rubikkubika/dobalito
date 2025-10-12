@@ -28,6 +28,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../hooks/useCategories';
 import { apiService } from '../services/apiService';
 import CategoryList from '../components/CategoryList';
+import SafeAvatar from '../components/SafeAvatar';
 import { getResponsiveValue } from '../utils/helpers';
 import { Category } from '../types';
 
@@ -180,17 +181,16 @@ const ProfilePage: React.FC = () => {
           >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Box sx={{ position: 'relative', mr: 3 }}>
-            <Avatar
-              src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${apiService.getApiBaseUrl()}${user.avatar}`) : undefined}
+            <SafeAvatar
+              src={user.avatar}
+              fallbackText={user.name.charAt(0).toUpperCase()}
               sx={{
                 width: 80,
                 height: 80,
                 fontSize: '2rem',
                 backgroundColor: '#4CAF50',
               }}
-            >
-              {user.name.charAt(0).toUpperCase()}
-            </Avatar>
+            />
             
             {/* Кнопки для управления аватаром */}
             <Box sx={{ 
