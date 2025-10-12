@@ -171,7 +171,7 @@ public class UserService {
      * Получить путь к файлу аватарки
      */
     public Path getAvatarPath(String filename) {
-        return Paths.get(UPLOAD_DIR + filename);
+        return Paths.get(UPLOAD_DIR + filename).toAbsolutePath();
     }
     
     /**
