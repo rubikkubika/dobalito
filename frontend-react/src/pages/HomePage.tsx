@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
 import FeatureCard from '../components/FeatureCard';
 import CategoryList from '../components/CategoryList';
+import CommitInfo from '../components/CommitInfo';
 import { getResponsiveValue } from '../utils/helpers';
 import { Category } from '../types';
 import { useCategories } from '../hooks/useCategories';
@@ -218,6 +219,8 @@ const HomePage: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Commit Info */}
+      <CommitInfo />
     </Container>
   );
 };

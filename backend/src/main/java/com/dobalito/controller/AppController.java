@@ -28,4 +28,11 @@ public class AppController {
             "platforms", new String[]{"Android", "iOS", "Web"}
         ));
     }
+    
+    @GetMapping("/info/commit")
+    public ResponseEntity<?> commitInfo() {
+        return ResponseEntity.ok(Map.of(
+            "commit", "e611dba"
+        ));
+    }
 }

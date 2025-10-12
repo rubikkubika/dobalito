@@ -210,6 +210,12 @@ export const apiService = {
     const response = await api.put(`/users/${userId}`, profileData);
     return response.data;
   },
+
+  // Commit info
+  async getCommitInfo() {
+    const response = await api.get('/info/commit');
+    return response.data;
+  },
 };
 
 export default api;

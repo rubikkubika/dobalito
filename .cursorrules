@@ -334,3 +334,55 @@ docs/
 - ALWAYS maintain consistent documentation structure
 - NEVER create documentation files outside `docs/`
 - ALWAYS reference documentation from `docs/` in code comments
+
+## 🔄 Commit Information Update Rules
+**ALWAYS update commit information when making commits or PRs to main branch**
+
+### Required commit info updates:
+- ✅ Update hardcoded commit hash in `backend/src/main/java/com/dobalito/controller/AppController.java` method `commitInfo()`
+- ✅ Update hardcoded commit hash in `frontend-react/src/components/CommitInfo.tsx` component
+- ✅ Ensure commit hash is visible on frontend homepage
+- ✅ Ensure commit hash is accessible via backend API `/api/v1/info/commit`
+
+### Backend commit info location:
+```java
+@GetMapping("/info/commit")
+public ResponseEntity<?> commitInfo() {
+    return ResponseEntity.ok(Map.of(
+        "commit", "e611dba"  // ← UPDATE THIS
+    ));
+}
+```
+
+### Frontend commit info location:
+```typescript
+const CommitInfo: React.FC<CommitInfoProps> = ({ className }) => {
+  // Hardcoded commit info - update this with each commit/PR to main
+  const commitHash = "e611dba";  // ← UPDATE THIS
+```
+
+### Frontend commit display:
+- ✅ Show first 5 characters of commit hash
+- ✅ Show tooltip with full commit hash
+- ✅ Place at bottom of homepage
+- ✅ Use consistent styling with Material-UI
+
+### Backend commit API:
+- ✅ Endpoint: `GET /api/v1/info/commit`
+- ✅ Return only commit hash
+- ✅ Use hardcoded value for simplicity
+
+### Update process:
+1. **Get current commit hash**: `git log --oneline -1`
+2. **Update backend**: Modify `AppController.java` commitInfo() method
+3. **Update frontend**: Modify `CommitInfo.tsx` component
+4. **Test both**: Verify API endpoint and frontend display
+5. **Commit changes**: Include commit hash update in commit message
+
+### Enforcement:
+- ALWAYS update commit information when committing to main branch
+- ALWAYS ensure commit info is visible on frontend
+- ALWAYS ensure commit info is accessible via backend API
+- ALWAYS maintain consistency between frontend and backend commit info
+- NEVER commit without updating commit information
+- ALWAYS test commit info display after deployment
