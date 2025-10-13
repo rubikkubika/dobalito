@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dobalito}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # Принудительно использовать парольную аутентификацию
+      POSTGRES_HOST_AUTH_METHOD: md5
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
