@@ -393,3 +393,36 @@ const CommitInfo: React.FC<CommitInfoProps> = ({ className }) => {
 - ALWAYS maintain consistency between frontend and backend commit info
 - NEVER commit without updating commit information
 - ALWAYS test commit info display after deployment
+
+## 📝 Documentation Creation Rules
+**NEVER create documentation files without explicit user request**
+
+### Required behavior:
+- ✅ Only create documentation when user explicitly asks (e.g., "создай документацию", "напиши README", "добавь описание")
+- ✅ When fixing bugs or adding features: Just implement the code, don't create docs
+- ✅ When making code changes: Focus on functionality, not documentation
+- ✅ When user asks for help: Provide code solutions, not documentation files
+- ❌ NEVER create *.md files without explicit request
+- ❌ NEVER create README files for new features automatically
+- ❌ NEVER create documentation "just in case" or "for completeness"
+
+### When to create documentation:
+- User says: "создай документацию", "напиши README", "добавь описание"
+- User says: "создай руководство", "напиши инструкцию"
+- User explicitly requests documentation for specific features
+- User asks for API documentation or deployment guides
+
+### When NOT to create documentation:
+- After fixing bugs or issues
+- After adding new features or functionality
+- After making code improvements
+- After updating configurations
+- When user just asks to "add" or "create" something (code, not docs)
+- When providing code solutions or fixes
+
+### Enforcement:
+- ALWAYS ask user if they want documentation before creating any *.md files
+- ALWAYS focus on code implementation first, documentation second
+- ALWAYS respect user's preference for minimal documentation
+- NEVER assume user wants documentation for every change
+- ALWAYS prioritize working code over comprehensive documentation

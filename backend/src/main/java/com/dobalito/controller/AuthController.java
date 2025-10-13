@@ -450,7 +450,7 @@ public class AuthController {
     public ResponseEntity<?> verifyCode(@RequestBody String verifyJson, HttpServletResponse response) {
         try {
             // Парсим JSON
-            Map<String, String> request = objectMapper.readValue(verifyJson, Map.class);
+            Map<String, String> request = objectMapper.readValue(verifyJson, new TypeReference<Map<String, String>>() {});
             String phone = request.get("phone");
             String code = request.get("code");
             String name = request.get("name"); // Опционально для регистрации
@@ -527,7 +527,7 @@ public class AuthController {
     public ResponseEntity<?> checkCode(@RequestBody String checkJson) {
         try {
             // Парсим JSON
-            Map<String, String> request = objectMapper.readValue(checkJson, Map.class);
+            Map<String, String> request = objectMapper.readValue(checkJson, new TypeReference<Map<String, String>>() {});
             String phone = request.get("phone");
             String code = request.get("code");
             
