@@ -27,6 +27,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        timeout: 600s
         script: |
           cd /opt/dobalito
           
@@ -118,6 +119,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        timeout: 60s
         script: |
           sudo mkdir -p /opt/dobalito/docker
           sudo chown $USER:$USER /opt/dobalito
@@ -158,11 +160,35 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        timeout: 900s
         script: |
           cd /opt/dobalito
           
           # Переименовываем env.production в .env
           mv env.production .env
+          
+          # Предварительно загружаем Docker образы для ускорения процесса
+          echo "=== Pre-pulling Docker images ==="
+          echo "Checking existing images..."
+          docker images | grep postgres || echo "PostgreSQL image not found"
+          docker images | grep nginx || echo "Nginx image not found"
+          
+          # Загружаем образы только если их нет
+          if ! docker images | grep -q "postgres.*15-alpine"; then
+            echo "Pulling PostgreSQL image..."
+            docker pull postgres:15-alpine
+          else
+            echo "PostgreSQL image already exists"
+          fi
+          
+          if ! docker images | grep -q "nginx.*alpine"; then
+            echo "Pulling Nginx image..."
+            docker pull nginx:alpine
+          else
+            echo "Nginx image already exists"
+          fi
+          
+          echo "=== Docker images ready ==="
           
           # Останавливаем только наши сервисы, НЕ трогаем registry
           docker-compose -f docker/docker-compose.prod.yml down || true
@@ -343,14 +369,24 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        timeout: 600s
         script: |
           cd /opt/dobalito
           
           # Логинимся в приватный registry
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
           
+          # Предварительно загружаем образы приложений
+          echo "=== Pre-pulling application images ==="
+          echo "Checking existing application images..."
+          docker images | grep dobalito-backend || echo "Backend image not found"
+          docker images | grep dobalito-frontend || echo "Frontend image not found"
+          
           # Принудительно обновляем образы из registry
+          echo "Pulling latest application images..."
           docker-compose -f docker/docker-compose.prod.yml pull backend frontend-react
+          
+          echo "=== Application images ready ==="
           
           # Запускаем приложения (backend и frontend)
           docker-compose -f docker/docker-compose.prod.yml up -d backend frontend-react
