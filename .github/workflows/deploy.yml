@@ -31,9 +31,13 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         timeout: 300s
         script: |
+          # Передаем переменную окружения в SSH сессию
+          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
+          
           cd /opt/dobalito
           
           echo "=== Testing Flyway Migrations ==="
+          echo "POSTGRES_PASSWORD is set: ${POSTGRES_PASSWORD:+yes}"
           
           # Проверяем состояние базы данных
           TABLE_COUNT=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
@@ -156,6 +160,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         timeout: 300s
         script: |
+          # Передаем переменную окружения в SSH сессию
+          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
+          
           cd /opt/dobalito
           
           # Переменные окружения уже настроены на сервере
@@ -355,6 +362,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         timeout: 300s
         script: |
+          # Передаем переменную окружения в SSH сессию
+          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
+          
           cd /opt/dobalito
           
           # Логинимся в приватный registry
