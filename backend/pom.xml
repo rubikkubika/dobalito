@@ -14,7 +14,7 @@
 
     <groupId>com.dobalito</groupId>
     <artifactId>dobalito-backend</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>dobalito-backend</name>
     <description>Dobalito Backend API</description>
 
