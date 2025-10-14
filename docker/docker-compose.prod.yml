@@ -31,7 +31,6 @@ services:
     image: ${BACKEND_IMAGE:-retsko.ru/dobalito-backend:latest}
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
-      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/dobalito}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
