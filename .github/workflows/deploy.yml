@@ -16,6 +16,8 @@ jobs:
   test-migrations:
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     
     steps:
     - name: Checkout code
@@ -34,7 +36,7 @@ jobs:
           echo "=== Testing Flyway Migrations ==="
           
           # Проверяем состояние базы данных
-          TABLE_COUNT=$(docker exec dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
+          TABLE_COUNT=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
           
           if [ "$TABLE_COUNT" = "0" ]; then
             echo "Database is empty - running Flyway migrations..."
@@ -43,7 +45,7 @@ jobs:
             echo "Database contains $TABLE_COUNT tables - checking if migrations needed..."
             
             # Проверяем есть ли таблица flyway_schema_history
-            FLYWAY_TABLE_EXISTS=$(docker exec dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'flyway_schema_history';" 2>/dev/null | tr -d ' \n' || echo "0")
+            FLYWAY_TABLE_EXISTS=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'flyway_schema_history';" 2>/dev/null | tr -d ' \n' || echo "0")
             
             if [ "$FLYWAY_TABLE_EXISTS" = "0" ]; then
               echo "No Flyway history table found - database was created manually, skipping migrations"
@@ -68,29 +70,29 @@ jobs:
             cd test-migrations/backend
             
             echo "Running Flyway migrations..."
-            mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=password
+            mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=$POSTGRES_PASSWORD
             
             echo "Checking migration results..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
             
             echo "Checking table structures..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
             
             echo "Checking users table has date_of_birth column..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
             
             echo "Checking if phone_verification_codes table exists..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'phone_verification_codes';"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'phone_verification_codes';"
             
             echo "Testing data insertion..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
             
             echo "Testing phone verification code insertion..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
             
             echo "Verifying test data..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
             
             echo "Cleaning up test files..."
             cd /
@@ -98,14 +100,16 @@ jobs:
           else
             echo "Skipping migrations - database already has data and no Flyway history"
             echo "Checking existing table structures..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
             
             echo "Checking if users table has date_of_birth column..."
-            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';" || echo "date_of_birth column not found in existing database"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';" || echo "date_of_birth column not found in existing database"
           fi
 
   deploy-infrastructure:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     
     steps:
     - name: Checkout code
@@ -183,17 +187,17 @@ jobs:
           
           # Проверяем существует ли база данных
           echo "=== Checking database existence ==="
-          DB_EXISTS=$(docker exec dobalito-postgres psql -U postgres -t -c "SELECT 1 FROM pg_database WHERE datname = 'dobalito';" 2>/dev/null | tr -d ' \n' || echo "")
+          DB_EXISTS=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -t -c "SELECT 1 FROM pg_database WHERE datname = 'dobalito';" 2>/dev/null | tr -d ' \n' || echo "")
           
           if [ -z "$DB_EXISTS" ]; then
             echo "Creating new database for Flyway migrations..."
-            docker exec dobalito-postgres psql -U postgres -c "CREATE DATABASE dobalito;"
+            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -c "CREATE DATABASE dobalito;"
             echo "Database created successfully"
           else
             echo "Database 'dobalito' already exists"
             
             # Проверяем есть ли в ней таблицы
-            TABLE_COUNT=$(docker exec dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
+            TABLE_COUNT=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
             
             if [ "$TABLE_COUNT" = "0" ]; then
               echo "Database exists but is empty - ready for migrations"
@@ -208,13 +212,13 @@ jobs:
           # Проверяем что база данных готова для миграций
           echo "=== Database verification ==="
           echo "List of databases:"
-          docker exec dobalito-postgres psql -U postgres -c "\l"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -c "\l"
           
           echo "Database connection test:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT current_database(), current_user, version();"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT current_database(), current_user, version();"
           
           echo "Checking that database is empty (no tables yet):"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt" || echo "No tables found (expected for empty database)"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt" || echo "No tables found (expected for empty database)"
           
           # Flyway таблицы будут созданы в test-migrations job
           echo "=== Database ready for Flyway migrations ==="
@@ -336,6 +340,8 @@ jobs:
   deploy-applications:
     runs-on: ubuntu-latest
     needs: build-images
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     
     steps:
     - name: Checkout code
@@ -387,35 +393,35 @@ jobs:
           # Проверяем Flyway миграции
           echo "=== Flyway Migration Verification ==="
           echo "Checking flyway_schema_history table:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
           
           echo "Checking if all tables were created by Flyway:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
           
           echo "Checking users table structure (should include date_of_birth):"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d users"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d users"
           
           echo "Checking categories table structure:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d categories"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d categories"
           
           echo "Checking tasks table structure:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d tasks"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d tasks"
           
           echo "Checking phone_verification_codes table structure:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d phone_verification_codes"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d phone_verification_codes"
           
           echo "Checking if date_of_birth column exists in users table:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
           
           echo "Testing data insertion with new field:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01') ON CONFLICT (email) DO NOTHING;"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01') ON CONFLICT (email) DO NOTHING;"
           
           echo "Testing phone verification code insertion:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
           
           echo "Verifying test data:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
           
           # Проверяем health check
           echo "=== Health check ==="
