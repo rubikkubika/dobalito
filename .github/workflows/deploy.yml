@@ -27,22 +27,13 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 600s
+        timeout: 300s
         script: |
           cd /opt/dobalito
           
-          echo "=== Testing Flyway Migrations on Server ==="
+          echo "=== Testing Flyway Migrations ==="
           
-          echo "Checking PostgreSQL container status..."
-          docker ps --filter "name=dobalito-postgres"
-          
-          echo "Testing PostgreSQL connection..."
-          docker exec dobalito-postgres psql -U postgres -c "SELECT version();" || echo "PostgreSQL connection failed"
-          
-          echo "Checking if dobalito database exists..."
-          docker exec dobalito-postgres psql -U postgres -c "\l" | grep dobalito || echo "Database dobalito not found"
-          
-          echo "Checking database state before migrations..."
+          # Проверяем состояние базы данных
           TABLE_COUNT=$(docker exec dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
           
           if [ "$TABLE_COUNT" = "0" ]; then
@@ -160,34 +151,18 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 900s
+        timeout: 300s
         script: |
           cd /opt/dobalito
           
           # Переименовываем env.production в .env
           mv env.production .env
           
-          # Предварительно загружаем Docker образы для ускорения процесса
-          echo "=== Pre-pulling Docker images ==="
-          echo "Checking existing images..."
-          docker images | grep postgres || echo "PostgreSQL image not found"
-          docker images | grep nginx || echo "Nginx image not found"
-          
-          # Загружаем образы только если их нет
-          if ! docker images | grep -q "postgres.*15-alpine"; then
-            echo "Pulling PostgreSQL image..."
-            docker pull postgres:15-alpine
-          else
-            echo "PostgreSQL image already exists"
-          fi
-          
-          if ! docker images | grep -q "nginx.*alpine"; then
-            echo "Pulling Nginx image..."
-            docker pull nginx:alpine
-          else
-            echo "Nginx image already exists"
-          fi
-          
+          # Параллельная загрузка Docker образов для ускорения процесса
+          echo "=== Pre-pulling Docker images in parallel ==="
+          docker pull postgres:15-alpine &
+          docker pull nginx:alpine &
+          wait
           echo "=== Docker images ready ==="
           
           # Останавливаем только наши сервисы, НЕ трогаем registry
@@ -301,7 +276,7 @@ jobs:
     
     - name: Configure Docker BuildKit
       run: |
-        echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
     
     - name: Login to Private Registry
       uses: docker/login-action@v3
@@ -329,8 +304,8 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=backend
+        cache-to: type=gha,scope=backend,mode=max
     
     - name: Extract metadata for frontend
       id: meta-frontend
@@ -350,9 +325,8 @@ jobs:
         file: ./docker/Dockerfile.frontend-react
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
-        labels: ${{ steps.meta-frontend.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=frontend
+        cache-to: type=gha,scope=frontend,mode=max
         no-cache: true
 
   deploy-applications:
@@ -369,7 +343,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 600s
+        timeout: 300s
         script: |
           cd /opt/dobalito
           
