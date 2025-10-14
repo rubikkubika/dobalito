@@ -79,11 +79,18 @@ jobs:
             echo "Checking users table has date_of_birth column..."
             docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
             
+            echo "Checking if phone_verification_codes table exists..."
+            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'phone_verification_codes';"
+            
             echo "Testing data insertion..."
             docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
             
+            echo "Testing phone verification code insertion..."
+            docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
+            
             echo "Verifying test data..."
             docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+            docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
             
             echo "Cleaning up test files..."
             cd /
@@ -253,168 +260,170 @@ jobs:
           docker ps --filter "name=registry" || echo "Registry not found in docker ps"
           curl -u admin:root https://retsko.ru/v2/ && echo "Registry accessible via HTTPS" || echo "Registry not accessible via HTTPS"
 
-  build-images:
-    runs-on: ubuntu-latest
-    needs: deploy-infrastructure
-    outputs:
-      backend-image: ${{ steps.meta.outputs.tags }}
-      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      with:
-        driver-opts: |
-          image=moby/buildkit:latest
-          network=host
-    
-    - name: Configure Docker BuildKit
-      run: |
-        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
-    
-    - name: Login to Private Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY_URL }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: retsko.ru/${{ env.BACKEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Backend
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./backend/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha,scope=backend
-        cache-to: type=gha,scope=backend,mode=max
-    
-    - name: Extract metadata for frontend
-      id: meta-frontend
-      uses: docker/metadata-action@v5
-      with:
-        images: retsko.ru/${{ env.FRONTEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./docker/Dockerfile.frontend-react
-        push: true
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        cache-from: type=gha,scope=frontend
-        cache-to: type=gha,scope=frontend,mode=max
-        no-cache: true
+  # Временно закомментировано для тестирования миграций
+  # build-images:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-infrastructure
+  #   outputs:
+  #     backend-image: ${{ steps.meta.outputs.tags }}
+  #     frontend-image: ${{ steps.meta-frontend.outputs.tags }}
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   
+  #   - name: Set up Docker Buildx
+  #     uses: docker/setup-buildx-action@v3
+  #     with:
+  #       driver-opts: |
+  #         image=moby/buildkit:latest
+  #         network=host
+  #   
+  #   - name: Configure Docker BuildKit
+  #     run: |
+  #       echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+  #   
+  #   - name: Login to Private Registry
+  #     uses: docker/login-action@v3
+  #     with:
+  #       registry: ${{ env.REGISTRY_URL }}
+  #       username: ${{ secrets.REGISTRY_USERNAME }}
+  #       password: ${{ secrets.REGISTRY_PASSWORD }}
+  #   
+  #   - name: Extract metadata
+  #     id: meta
+  #     uses: docker/metadata-action@v5
+  #     with:
+  #       images: retsko.ru/${{ env.BACKEND_IMAGE }}
+  #       tags: |
+  #         type=ref,event=branch
+  #         type=ref,event=pr
+  #         type=sha,prefix={{branch}}-
+  #         type=raw,value=latest,enable={{is_default_branch}}
+  #   
+  #   - name: Build and push Backend
+  #     uses: docker/build-push-action@v5
+  #     with:
+  #       context: .
+  #       file: ./backend/Dockerfile
+  #       push: true
+  #       tags: ${{ steps.meta.outputs.tags }}
+  #       labels: ${{ steps.meta.outputs.labels }}
+  #       cache-from: type=gha,scope=backend
+  #       cache-to: type=gha,scope=backend,mode=max
+  #   
+  #   - name: Extract metadata for frontend
+  #     id: meta-frontend
+  #     uses: docker/metadata-action@v5
+  #     with:
+  #       images: retsko.ru/${{ env.FRONTEND_IMAGE }}
+  #       tags: |
+  #         type=ref,event=branch
+  #         type=ref,event=pr
+  #         type=sha,prefix={{branch}}-
+  #         type=raw,value=latest,enable={{is_default_branch}}
+  #   
+  #   - name: Build and push Frontend
+  #     uses: docker/build-push-action@v5
+  #     with:
+  #       context: .
+  #       file: ./docker/Dockerfile.frontend-react
+  #       push: true
+  #       tags: ${{ steps.meta-frontend.outputs.tags }}
+  #       cache-from: type=gha,scope=frontend
+  #       cache-to: type=gha,scope=frontend,mode=max
+  #       no-cache: true
 
-  deploy-applications:
-    runs-on: ubuntu-latest
-    needs: build-images
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy applications to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 300s
-        script: |
-          cd /opt/dobalito
-          
-          # Логинимся в приватный registry
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-          
-          # Предварительно загружаем образы приложений
-          echo "=== Pre-pulling application images ==="
-          echo "Checking existing application images..."
-          docker images | grep dobalito-backend || echo "Backend image not found"
-          docker images | grep dobalito-frontend || echo "Frontend image not found"
-          
-          # Принудительно обновляем образы из registry
-          echo "Pulling latest application images..."
-          docker-compose -f docker/docker-compose.prod.yml pull backend frontend-react
-          
-          echo "=== Application images ready ==="
-          
-          # Запускаем приложения (backend и frontend)
-          docker-compose -f docker/docker-compose.prod.yml up -d backend frontend-react
-          
-          # Ждем запуска и проверяем health
-          sleep 30
-          
-          # Проверяем версии образов
-          echo "=== Checking image versions ==="
-          docker images | grep dobalito
-          
-          # Проверяем статус контейнеров
-          echo "=== Docker containers status ==="
-          docker ps -a
-          
-          # Проверяем логи backend
-          echo "=== Backend logs ==="
-          docker logs dobalito-backend --tail 50
-          
-          # Проверяем Flyway миграции
-          echo "=== Flyway Migration Verification ==="
-          echo "Checking flyway_schema_history table:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
-          
-          echo "Checking if all tables were created by Flyway:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
-          
-          echo "Checking users table structure (should include date_of_birth):"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d users"
-          
-          echo "Checking categories table structure:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d categories"
-          
-          echo "Checking tasks table structure:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d tasks"
-          
-          echo "Checking if date_of_birth column exists in users table:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
-          
-          echo "Testing data insertion with new field:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01') ON CONFLICT (email) DO NOTHING;"
-          
-          echo "Verifying test data:"
-          docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
-          
-          # Проверяем health check
-          echo "=== Health check ==="
-          curl -f http://localhost:8080/api/v1/auth/test || echo "Backend health check failed"
-          curl -f https://retsko.ru/api/v1/auth/test || echo "Nginx proxy health check failed"
-          
-          echo "Deployment successful!"
-    
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+  # Временно закомментировано для тестирования миграций
+  # deploy-applications:
+  #   runs-on: ubuntu-latest
+  #   needs: build-images
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   
+  #   - name: Deploy applications to server
+  #     uses: appleboy/ssh-action@v1.0.3
+  #     with:
+  #       host: ${{ secrets.SERVER_HOST }}
+  #       username: ${{ secrets.SERVER_USERNAME }}
+  #       key: ${{ secrets.SERVER_SSH_KEY }}
+  #       timeout: 300s
+  #       script: |
+  #         cd /opt/dobalito
+  #         
+  #         # Логинимся в приватный registry
+  #         echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+  #         
+  #         # Предварительно загружаем образы приложений
+  #         echo "=== Pre-pulling application images ==="
+  #         echo "Checking existing application images..."
+  #         docker images | grep dobalito-backend || echo "Backend image not found"
+  #         docker images | grep dobalito-frontend || echo "Frontend image not found"
+  #         
+  #         # Принудительно обновляем образы из registry
+  #         echo "Pulling latest application images..."
+  #         docker-compose -f docker/docker-compose.prod.yml pull backend frontend-react
+  #         
+  #         echo "=== Application images ready ==="
+  #         
+  #         # Запускаем приложения (backend и frontend)
+  #         docker-compose -f docker/docker-compose.prod.yml up -d backend frontend-react
+  #         
+  #         # Ждем запуска и проверяем health
+  #         sleep 30
+  #         
+  #         # Проверяем версии образов
+  #         echo "=== Checking image versions ==="
+  #         docker images | grep dobalito
+  #         
+  #         # Проверяем статус контейнеров
+  #         echo "=== Docker containers status ==="
+  #         docker ps -a
+  #         
+  #         # Проверяем логи backend
+  #         echo "=== Backend logs ==="
+  #         docker logs dobalito-backend --tail 50
+  #         
+  #         # Проверяем Flyway миграции
+  #         echo "=== Flyway Migration Verification ==="
+  #         echo "Checking flyway_schema_history table:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
+  #         
+  #         echo "Checking if all tables were created by Flyway:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "\dt"
+  #         
+  #         echo "Checking users table structure (should include date_of_birth):"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d users"
+  #         
+  #         echo "Checking categories table structure:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d categories"
+  #         
+  #         echo "Checking tasks table structure:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "\d tasks"
+  #         
+  #         echo "Checking if date_of_birth column exists in users table:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
+  #         
+  #         echo "Testing data insertion with new field:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01') ON CONFLICT (email) DO NOTHING;"
+  #         
+  #         echo "Verifying test data:"
+  #         docker exec dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
+  #         
+  #         # Проверяем health check
+  #         echo "=== Health check ==="
+  #         curl -f http://localhost:8080/api/v1/auth/test || echo "Backend health check failed"
+  #         curl -f https://retsko.ru/api/v1/auth/test || echo "Nginx proxy health check failed"
+  #         
+  #         echo "Deployment successful!"
+  #   
+  #   - name: Notify deployment status
+  #     if: always()
+  #     run: |
+  #       if [ "${{ job.status }}" == "success" ]; then
+  #         echo "✅ Deployment successful!"
+  #       else
+  #         echo "❌ Deployment failed!"
+  #       fi
