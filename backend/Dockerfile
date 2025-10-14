@@ -27,7 +27,7 @@ RUN apk add --no-cache curl
 WORKDIR /app
 
 # Copy built jar from builder stage
-COPY --from=builder /app/target/dobalito-backend-1.0.0.jar app.jar
+COPY --from=builder /app/target/dobalito-backend-1.0.1.jar app.jar
 
 # Expose port
 EXPOSE 8080
