@@ -32,10 +32,8 @@ services:
     container_name: ${CONTAINER_NAME_PREFIX:-dobalito}-backend
     environment:
       SPRING_DATASOURCE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/dobalito}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
-      JWT_SECRET: ${JWT_SECRET:-dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-30000}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
       SERVER_PORT: ${BACKEND_PORT:-8080}
       APP_BASE_URL: https://retsko.ru
     ports:
