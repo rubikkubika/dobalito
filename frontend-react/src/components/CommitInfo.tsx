@@ -8,7 +8,7 @@ interface CommitInfoProps {
 
 const CommitInfo: React.FC<CommitInfoProps> = ({ className }) => {
   // Hardcoded commit info - update this with each commit/PR to main
-  const commitHash = "cd26c5";
+  const commitHash = "f3a9b";
 
   const shortCommit = commitHash.substring(0, 5);
 
