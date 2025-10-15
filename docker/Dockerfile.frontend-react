@@ -1,5 +1,5 @@
 # ============================
-# Stage 1 — Build React app
+# Stage 1 — Build React app with esbuild
 # ============================
 FROM node:18-alpine AS build
 
@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # 3️⃣ Копируем исходники (всё остальное)
 COPY frontend-react/ ./
 
-# 4️⃣ Сборка production-версии
+# 4️⃣ Сборка production-версии с esbuild
 RUN npm run build
 
 # ============================
@@ -24,19 +24,15 @@ RUN npm run build
 # ============================
 FROM nginx:alpine AS production
 
-# 5️⃣ Копируем собранные файлы
+# 5️⃣ Копируем собранные файлы (теперь bundle.js вместо множественных chunk'ов)
 COPY --from=build /app/build /usr/share/nginx/html
 
 # 6️⃣ Копируем кастомный Nginx-конфиг
 COPY docker/nginx-react.conf /etc/nginx/conf.d/default.conf
 
-# 7️⃣ Настраиваем кэширование статики
-RUN echo 'location ~* \.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$ { expires 1y; add_header Cache-Control "public, immutable"; }' \
-    > /etc/nginx/conf.d/cache.conf
-
-# 8️⃣ Healthcheck
+# 7️⃣ Healthcheck - проверяем что bundle.js доступен
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:3000 || exit 1
+  CMD wget -qO- http://localhost:3000/bundle.js || exit 1
 
 EXPOSE 3000
 
