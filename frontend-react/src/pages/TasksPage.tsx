@@ -1,4 +1,4 @@
-// Home page component
+// Tasks page component - exact copy of HomePage
 import React, { useEffect } from 'react';
 import {
   Container,
@@ -28,7 +28,7 @@ import { Category } from '../types';
 import { useCategories } from '../hooks/useCategories';
 import { useUserProfile } from '../hooks/useUserProfile';
 
-const HomePage: React.FC = () => {
+const TasksPage: React.FC = () => {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
@@ -257,4 +257,6 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default TasksPage;
+
+

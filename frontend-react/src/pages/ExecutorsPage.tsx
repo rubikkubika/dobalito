@@ -7,13 +7,12 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  Button,
   Card,
   CardContent,
   Avatar,
   Chip,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Star as StarIcon } from '@mui/icons-material';
+import { Star as StarIcon } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -73,10 +72,6 @@ const ExecutorsPage: React.FC = () => {
     }
   }, [category, categories, categoriesLoading]);
 
-  const handleBackClick = () => {
-    navigate('/home');
-  };
-
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -122,23 +117,7 @@ const ExecutorsPage: React.FC = () => {
             minWidth: 0 // Позволяет контенту сжиматься
           }}>
             {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Button
-                variant="outlined"
-                onClick={handleBackClick}
-                startIcon={<ArrowBackIcon />}
-                sx={{
-                  mr: 2,
-                  borderColor: '#E0E0E0',
-                  color: '#757575',
-                  '&:hover': {
-                    borderColor: '#2196F3',
-                    color: '#2196F3',
-                  },
-                }}
-              >
-                {t('executors.back')}
-              </Button>
+            <Box sx={{ mb: 3 }}>
               <Typography
                 variant="h5"
                 component="h1"

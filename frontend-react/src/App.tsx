@@ -13,6 +13,8 @@ import DesignsPage from './pages/DesignsPage';
 import ExecutorsPage from './pages/ExecutorsPage';
 import SearchPage from './pages/SearchPage';
 import LoginPage from './pages/LoginPage';
+import CreateTaskPage from './pages/CreateTaskPage';
+import TasksPage from './pages/TasksPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Create theme with green colors matching doBalito design
@@ -67,6 +69,8 @@ const theme = createTheme({
         root: {
           paddingLeft: '0 !important',
           paddingRight: '0 !important',
+          paddingTop: '0 !important',
+          paddingBottom: '0 !important',
         },
       },
     },
@@ -142,6 +146,16 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/designs" element={<DesignsPage />} />
+            <Route path="/tasks/create" element={
+              <ProtectedRoute>
+                <CreateTaskPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/tasks" element={
+              <ProtectedRoute>
+                <TasksPage />
+              </ProtectedRoute>
+            } />
                 </Routes>
               </Layout>
             </Router>

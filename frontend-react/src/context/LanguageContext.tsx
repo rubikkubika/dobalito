@@ -19,6 +19,7 @@ const translations = {
     'nav.profile': 'Профиль',
     'nav.settings': 'Настройки',
     'nav.designs': 'Дизайны',
+    'nav.tasks': 'Задания',
     'nav.login_register': 'Вход/Регистрация',
     'nav.for_executors': 'Для исполнителей',
     'nav.search': 'Поиск',
@@ -28,6 +29,32 @@ const translations = {
     'home.subtitle': 'Приложение для создания заданий с исполнителями',
     'home.categories': 'Категории',
     'home.features': 'Возможности приложения',
+    'home.my_tasks': 'Мои задания',
+    'home.open_tasks': 'Открытые',
+    'home.closed_tasks': 'Закрытые',
+    'home.create_task': 'Создать задание',
+    
+    // Task creation
+    'task.create_title': 'Создание задания',
+    'task.title': 'Название задания',
+    'task.description': 'Описание задания',
+    'task.category': 'Категория',
+    'task.start_date': 'Дата начала',
+    'task.start_time': 'Время начала',
+    'task.end_date': 'Дата окончания',
+    'task.end_time': 'Время окончания',
+    'task.create_button': 'Создать задание',
+    'task.create_success': 'Задание успешно создано!',
+    'task.status.open': 'Открыто',
+    'task.status.in_progress': 'В работе',
+    'task.status.completed': 'Завершено',
+    'task.status.cancelled': 'Отменено',
+    'task.no_open_tasks': 'Нет открытых заданий',
+    'task.no_closed_tasks': 'Нет закрытых заданий',
+    
+    // Common
+    'common.cancel': 'Отмена',
+    'common.back': 'Назад',
     
     // Categories
     'category.surfing': 'Серфинг',
@@ -88,6 +115,7 @@ const translations = {
     'nav.profile': 'Profile',
     'nav.settings': 'Settings',
     'nav.designs': 'Designs',
+    'nav.tasks': 'Tasks',
     'nav.login_register': 'Login/Register',
     'nav.for_executors': 'For Executors',
     'nav.search': 'Search',
@@ -97,6 +125,32 @@ const translations = {
     'home.subtitle': 'Application for creating tasks with executors',
     'home.categories': 'Categories',
     'home.features': 'Application Features',
+    'home.my_tasks': 'My Tasks',
+    'home.open_tasks': 'Open',
+    'home.closed_tasks': 'Closed',
+    'home.create_task': 'Create Task',
+    
+    // Task creation
+    'task.create_title': 'Create Task',
+    'task.title': 'Task Title',
+    'task.description': 'Task Description',
+    'task.category': 'Category',
+    'task.start_date': 'Start Date',
+    'task.start_time': 'Start Time',
+    'task.end_date': 'End Date',
+    'task.end_time': 'End Time',
+    'task.create_button': 'Create Task',
+    'task.create_success': 'Task created successfully!',
+    'task.status.open': 'Open',
+    'task.status.in_progress': 'In Progress',
+    'task.status.completed': 'Completed',
+    'task.status.cancelled': 'Cancelled',
+    'task.no_open_tasks': 'No open tasks',
+    'task.no_closed_tasks': 'No closed tasks',
+    
+    // Common
+    'common.cancel': 'Cancel',
+    'common.back': 'Back',
     
     // Categories
     'category.surfing': 'Surfing',

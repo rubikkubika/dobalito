@@ -489,7 +489,7 @@ public class AuthController {
             jwtCookie.setHttpOnly(true);
             jwtCookie.setSecure(false); // false для localhost, true для HTTPS в продакшене
             jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(30); // 30 секунд для тестирования
+            jwtCookie.setMaxAge(2592000); // 30 дней (1 месяц) в секундах
             response.addCookie(jwtCookie);
             
             logger.info("=== УСПЕШНАЯ АВТОРИЗАЦИЯ ===");

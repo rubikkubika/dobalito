@@ -1,6 +1,6 @@
 import React from 'react';
 import { BottomNavigation as MuiBottomNavigation, BottomNavigationAction, Box } from '@mui/material';
-import { Home, Search, Person } from '@mui/icons-material';
+import { Home, Search, Person, Assignment } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -13,7 +13,8 @@ const BottomNavigation: React.FC = () => {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 0;
     if (path.startsWith('/search')) return 1;
-    if (path.startsWith('/profile')) return 2;
+    if (path.startsWith('/designs')) return 2;
+    if (path.startsWith('/profile')) return 3;
     return 0;
   };
 
@@ -26,6 +27,9 @@ const BottomNavigation: React.FC = () => {
         navigate('/search');
         break;
       case 2:
+        navigate('/designs');
+        break;
+      case 3:
         navigate('/profile');
         break;
     }
@@ -65,6 +69,10 @@ const BottomNavigation: React.FC = () => {
         <BottomNavigationAction
           label={t('nav.search')}
           icon={<Search />}
+        />
+        <BottomNavigationAction
+          label={t('nav.tasks')}
+          icon={<Assignment />}
         />
         <BottomNavigationAction
           label={t('nav.profile')}

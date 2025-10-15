@@ -245,6 +245,63 @@ export const apiService = {
     const response = await api.get('/info/commit');
     return response.data;
   },
+
+  // Task management
+  async createTask(taskData: {
+    title: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    categoryId: number;
+  }) {
+    const response = await api.post('/tasks', taskData);
+    return response.data;
+  },
+
+  async getTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
+  async getMyTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks/my?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
+  async getOpenTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks/open?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
+  async getTaskById(id: number) {
+    const response = await api.get(`/tasks/${id}`);
+    return response.data;
+  },
+
+  async updateTask(id: number, taskData: any) {
+    const response = await api.put(`/tasks/${id}`, taskData);
+    return response.data;
+  },
+
+  async deleteTask(id: number) {
+    const response = await api.delete(`/tasks/${id}`);
+    return response.data;
+  },
+
+  async assignExecutor(taskId: number, executorId: number) {
+    const response = await api.post(`/tasks/${taskId}/assign?executorId=${executorId}`);
+    return response.data;
+  },
+
+  async updateTaskStatus(id: number, status: string) {
+    const response = await api.put(`/tasks/${id}/status?status=${status}`);
+    return response.data;
+  },
+
+  async getTaskStats() {
+    const response = await api.get('/tasks/stats');
+    return response.data;
+  },
 };
 
 export default api;

@@ -12,7 +12,7 @@ code {
     monospace;
 }
 
-/* Force remove padding from all MUI Container components */
+/* Force remove horizontal padding from all MUI Container components */
 .MuiContainer-root {
   padding-left: 0 !important;
   padding-right: 0 !important;

@@ -22,9 +22,10 @@ import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideSidebar?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language } = useLanguage();
@@ -61,13 +62,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      minHeight: '100vh',
-      maxWidth: '100vw',
-      overflowX: 'hidden'
-    }}>
+    <>
       {/* Top Bar - Desktop */}
       <AppBar
         position="fixed"
@@ -359,8 +354,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           backgroundColor: '#FAFAFA',
           overflow: 'auto',
-          paddingTop: { xs: '70px', sm: '90px' }, // Adjust for mobile top bar
-          paddingBottom: { xs: '70px', sm: 0 }, // Add bottom padding for mobile
+          paddingTop: { xs: '70px', sm: '90px' }, // Возвращаем оригинальный паддинг
+          paddingBottom: { xs: '70px', sm: 0 }, // Оставляем только нижний паддинг для мобильных
         }}
       >
         {children}
@@ -368,7 +363,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Bottom Navigation for Mobile */}
       <BottomNavigation />
-    </Box>
+    </>
   );
 };
 

@@ -9,7 +9,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dobalito}
     driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:test
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:root}
   
   jpa:
@@ -68,4 +68,4 @@ management:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:dobalito-secret-key-for-jwt-token-generation-very-long-and-secure-key}
-  expiration: ${JWT_EXPIRATION:30000} # 30 seconds in milliseconds
+  expiration: ${JWT_EXPIRATION:2592000000} # 30 days in milliseconds (1 month)

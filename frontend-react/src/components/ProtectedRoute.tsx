@@ -11,8 +11,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Перенаправляем на страницу логина с сохранением текущего пути
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // При обновлении страницы всегда перенаправляем на главную, а не на логин
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;
