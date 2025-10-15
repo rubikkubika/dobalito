@@ -48,7 +48,7 @@ const HomePage: React.FC = () => {
     navigate(`/executors/${category.name}`);
   };
 
-  const handleTaskTypeClick = (type: 'open' | 'closed') => {
+  const handleTaskTypeClick = (type: string) => {
     // Переход на страницу заданий с фильтром
     navigate(`/tasks?type=${type}`);
   };

@@ -1,120 +1,138 @@
-// Tasks page component - exact copy of HomePage
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
   Box,
-  Alert,
+  Typography,
+  Container,
+  Card,
+  CardContent,
   CircularProgress,
+  Alert,
+  Chip,
+  Pagination,
   Button,
 } from '@mui/material';
 import {
+  AccessTime as AccessTimeIcon,
+  Category as CategoryIcon,
   Work as WorkIcon,
-  Search as SearchIcon,
-  Person as PersonIcon,
-  Star as StarIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
-import FeatureCard from '../components/FeatureCard';
+import { Task, Category } from '../types';
 import CategoryList from '../components/CategoryList';
-import CommitInfo from '../components/CommitInfo';
 import MyTasksSection from '../components/MyTasksSection';
-import { getResponsiveValue } from '../utils/helpers';
-import { Category } from '../types';
 import { useCategories } from '../hooks/useCategories';
-import { useUserProfile } from '../hooks/useUserProfile';
+
+type TaskFilterType = 'open' | 'closed' | 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 const TasksPage: React.FC = () => {
-  const { state, dispatch } = useApp();
-  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const taskType = (searchParams.get('type') || 'open') as TaskFilterType;
   
-  // Мемоизируем язык для бэкенда, чтобы избежать лишних перерендеров
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
+  // Мемоизируем язык для бэкенда
   const backendLanguage = React.useMemo(() => {
     return language === 'ru' ? 'ru' : 'en';
   }, [language]);
   
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories(true, backendLanguage);
-  const { fetchUserProfile } = useUserProfile();
+
+  useEffect(() => {
+    loadTasks();
+  }, [page, taskType]);
 
   const handleCategoryClick = (category: Category) => {
-    // Проверяем токен перед навигацией
-    fetchUserProfile();
     navigate(`/executors/${category.name}`);
   };
 
-  const handleTaskTypeClick = (type: 'open' | 'closed') => {
-    // Переход на страницу заданий с фильтром
-    navigate(`/tasks?type=${type}`);
+  const handleStatusClick = (status: TaskFilterType) => {
+    setPage(0); // Reset page when switching status
+    navigate(`/tasks?type=${status}`);
   };
 
   const handleCreateTaskClick = () => {
-    // Переход на страницу создания задания
     navigate('/tasks/create');
   };
 
-  const features = [
-    {
-      title: t('feature.create_tasks'),
-      description: t('feature.create_tasks_desc'),
-      icon: <WorkIcon />,
-      color: '#2196F3', // Blue
-      category: t('category.surfing'),
-    },
-    {
-      title: t('feature.find_executors'),
-      description: t('feature.find_executors_desc'),
-      icon: <SearchIcon />,
-      color: '#4CAF50', // Green
-      category: t('category.surfing'),
-    },
-    {
-      title: t('feature.profile_management'),
-      description: t('feature.profile_management_desc'),
-      icon: <PersonIcon />,
-      color: '#FF9800', // Orange
-      category: t('category.surfing'),
-    },
-    {
-      title: t('feature.rating_system'),
-      description: t('feature.rating_system_desc'),
-      icon: <StarIcon />,
-      color: '#9C27B0', // Purple
-      category: t('category.surfing'),
-    },
-  ];
+  const loadTasks = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let response;
+      
+      // Check if it's a specific status or grouped filter
+      if (taskType === 'open') {
+        response = await apiService.getMyOpenTasks(page, 10, 'createdAt', 'desc');
+      } else if (taskType === 'closed') {
+        response = await apiService.getMyClosedTasks(page, 10, 'createdAt', 'desc');
+      } else {
+        // For specific status (OPEN, IN_PROGRESS, COMPLETED, CANCELLED)
+        response = await apiService.getMyTasksByStatus(taskType, page, 10, 'createdAt', 'desc');
+      }
+      
+      if (response.success) {
+        setTasks(response.tasks || []);
+        setTotalPages(response.totalPages || 0);
+        setTotalElements(response.totalElements || 0);
+      } else {
+        setError(response.message || 'Ошибка при загрузке заданий');
+      }
+    } catch (err: any) {
+      console.error('Error loading tasks:', err);
+      setError('Не удалось загрузить задания');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Filter features based on selected category
-  const filteredFeatures = features;
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value - 1); // MUI Pagination uses 1-based index
+  };
 
-  if (state.isLoading) {
-    return (
-      <Container maxWidth="lg" sx={{ px: 0 }}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="50vh"
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'OPEN':
+        return 'success';
+      case 'IN_PROGRESS':
+        return 'warning';
+      case 'COMPLETED':
+        return 'info';
+      case 'CANCELLED':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    return t(`task.status.${status.toLowerCase()}`);
+  };
 
   return (
     <Container maxWidth="lg">
-      {state.error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {state.error}
-        </Alert>
-      )}
-
       <Box sx={{ 
         display: 'flex', 
         gap: { xs: 2, sm: 3 }, 
@@ -156,7 +174,10 @@ const TasksPage: React.FC = () => {
                 {t('home.create_task')}
               </Button>
               
-              <MyTasksSection onTaskTypeClick={handleTaskTypeClick} />
+              <MyTasksSection 
+                onTaskTypeClick={handleStatusClick}
+                activeTaskType={taskType}
+              />
             </Box>
           )}
           
@@ -182,82 +203,173 @@ const TasksPage: React.FC = () => {
           flex: 1,
           width: { xs: '100%', md: 'auto' }
         }}>
-          {/* Welcome Section - matching Flutter design */}
-          <Box
-            sx={{
-              width: '100%',
-              mb: getResponsiveValue(2, 3, 4),
-              backgroundColor: '#FFFFFF',
-              borderRadius: '20px',
-              border: '1px solid #E0E0E0',
-              textAlign: 'center',
-              p: { xs: 2, sm: 3, md: 4 }
-            }}
-          >
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
+          {/* Status Filter Buttons - Only for mobile */}
+          <Box sx={{ 
+            mb: 3,
+            display: { xs: 'flex', md: 'none' },
+            gap: 1,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-start'
+          }}>
+            <Button
+              variant={taskType === 'OPEN' ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => handleStatusClick('OPEN')}
               sx={{
-                fontWeight: 600,
-                color: '#000000',
-                fontSize: getResponsiveValue('1.2rem', '1.5rem', '2rem'),
-                mb: getResponsiveValue(1, 2, 3),
-                lineHeight: 1.2
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2,
+                fontSize: '0.85rem',
               }}
             >
-              {t('home.welcome')}
-            </Typography>
-            <Typography
-              variant="body1"
+              {t('task.status.open')}
+            </Button>
+            <Button
+              variant={taskType === 'IN_PROGRESS' ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => handleStatusClick('IN_PROGRESS')}
               sx={{
-                color: '#757575',
-                fontSize: getResponsiveValue('0.8rem', '0.9rem', '1rem'),
-                maxWidth: 600,
-                mx: 'auto',
-                lineHeight: 1.5
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2,
+                fontSize: '0.85rem',
               }}
             >
-              {t('home.subtitle')}
-            </Typography>
+              {t('task.status.in_progress')}
+            </Button>
+            <Button
+              variant={taskType === 'COMPLETED' ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => handleStatusClick('COMPLETED')}
+              sx={{
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2,
+                fontSize: '0.85rem',
+              }}
+            >
+              {t('task.status.completed')}
+            </Button>
+            <Button
+              variant={taskType === 'CANCELLED' ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => handleStatusClick('CANCELLED')}
+              sx={{
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2,
+                fontSize: '0.85rem',
+              }}
+            >
+              {t('task.status.cancelled')}
+            </Button>
           </Box>
 
-          {/* Features Grid */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: { xs: 1.5, sm: 2 }, 
-            justifyContent: 'flex-start' 
-          }}>
-            {filteredFeatures.map((feature, index) => (
-              <Box key={index} sx={{ 
-                width: { 
-                  xs: '100%', 
-                  sm: '100%', 
-                  md: 'calc(50% - 8px)', 
-                  lg: 'calc(50% - 8px)', 
-                  xl: 'calc(50% - 8px)' 
-                } 
-              }}>
-                <FeatureCard
-                  title={feature.title}
-                  description={feature.description}
-                  icon={feature.icon}
-                  color={feature.color}
-                />
+          {/* Loading */}
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && tasks.length === 0 && (
+            <Alert severity="info">
+              {t('task.no_open_tasks')}
+            </Alert>
+          )}
+
+          {/* Tasks list */}
+          {!loading && !error && tasks.length > 0 && (
+            <>
+              <Box sx={{ mb: 3 }}>
+                {tasks.map((task) => (
+                  <Card 
+                    key={task.id} 
+                    sx={{ 
+                      mb: 2,
+                      '&:hover': {
+                        boxShadow: 3,
+                        transform: 'translateY(-2px)',
+                        transition: 'all 0.2s ease-in-out',
+                      },
+                    }}
+                  >
+                    <CardContent>
+                      {/* Task header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {task.title}
+                        </Typography>
+                        <Chip 
+                          label={getStatusText(task.status)} 
+                          color={getStatusColor(task.status) as any}
+                          size="small"
+                        />
+                      </Box>
+
+                      {/* Task description */}
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ mb: 2 }}
+                      >
+                        {task.description}
+                      </Typography>
+
+                      {/* Task metadata */}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                        {/* Category */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <CategoryIcon fontSize="small" color="action" />
+                          <Typography variant="caption" color="text.secondary">
+                            {task.category.name}
+                          </Typography>
+                        </Box>
+
+                        {/* Date */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <AccessTimeIcon fontSize="small" color="action" />
+                          <Typography variant="caption" color="text.secondary">
+                            {formatDate(task.startDate)} - {formatDate(task.endDate)}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Created date */}
+                      <Typography variant="caption" color="text.secondary">
+                        Создано: {formatDate(task.createdAt)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
               </Box>
-            ))}
-          </Box>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Pagination 
+                    count={totalPages} 
+                    page={page + 1} 
+                    onChange={handlePageChange}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </>
+          )}
         </Box>
       </Box>
-
-      {/* Commit Info */}
-      <CommitInfo />
     </Container>
   );
 };
 
 export default TasksPage;
-
-
 

@@ -13,7 +13,7 @@ const BottomNavigation: React.FC = () => {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 0;
     if (path.startsWith('/search')) return 1;
-    if (path.startsWith('/designs')) return 2;
+    if (path.startsWith('/tasks')) return 2;
     if (path.startsWith('/profile')) return 3;
     return 0;
   };
@@ -27,7 +27,7 @@ const BottomNavigation: React.FC = () => {
         navigate('/search');
         break;
       case 2:
-        navigate('/designs');
+        navigate('/tasks');
         break;
       case 3:
         navigate('/profile');

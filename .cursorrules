@@ -1,5 +1,72 @@
 # Cursor Rules for Dobalito Project
 
+## 💻 Terminal/Shell Rules (CRITICAL - ALWAYS ENFORCE)
+**🔴 MANDATORY: ALWAYS use Git Bash for ALL terminal commands on Windows**
+**🔴 NEVER use PowerShell commands (tasklist, findstr, $env:, etc.)**
+
+### Required shell usage:
+- ✅ **MANDATORY**: Use Git Bash: `C:\Program Files\Git\bin\bash.exe` (ONLY shell allowed)
+- ✅ Git Bash commands with proper Unix syntax (ps, grep, curl, etc.)
+- ✅ Environment variables: `VARIABLE=value` (not `$env:VARIABLE`)
+- ✅ Command chaining: `&&` (not `;` from PowerShell)
+- ✅ Background processes: `command &` (not `is_background: true`)
+- ❌ **NEVER** use PowerShell commands: `tasklist`, `findstr`, `$env:`, `Get-Process`
+- ❌ **NEVER** use `$env:VARIABLE` syntax
+- ❌ **NEVER** use PowerShell-specific cmdlets
+- ❌ **NEVER** use Windows CMD commands without Git Bash wrapper
+
+### Git Bash command examples:
+```bash
+# Backend start (Git Bash)
+cd backend && \
+SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/dobalito" \
+SPRING_DATASOURCE_USERNAME="postgres" \
+SPRING_DATASOURCE_PASSWORD="root" \
+mvn spring-boot:run &
+
+# Frontend start (Git Bash)
+cd frontend-react && npm start &
+
+# Check processes
+ps aux | grep -E 'java|node' | grep -v grep
+
+# Port check
+netstat -ano | grep ':8080\|:3000\|:3001'
+
+# API check
+curl --max-time 10 http://localhost:8080/api/v1/health
+```
+
+### Enforcement (AI Assistant MUST follow):
+- 🔴 **CRITICAL**: EVERY terminal command MUST use Git Bash wrapper
+- 🔴 **CRITICAL**: If you catch yourself typing `tasklist`, `findstr`, `$env:` - STOP and use Git Bash
+- ✅ ALWAYS execute commands through Git Bash: `& "C:\Program Files\Git\bin\bash.exe" -c "command"`
+- ✅ ALWAYS use Unix-style commands: `ps`, `grep`, `curl`, `kill`
+- ✅ ALWAYS use proper bash syntax for env variables: `VARIABLE=value`
+- ❌ NEVER use PowerShell native commands without Git Bash wrapper
+- ❌ NEVER switch to PowerShell (even if it seems easier)
+- ❌ NEVER assume PowerShell is acceptable alternative
+
+### Git Bash invocation in terminal commands:
+```bash
+# ✅ CORRECT: Always use Git Bash wrapper for ALL commands
+& "C:\Program Files\Git\bin\bash.exe" -c "ps aux | grep java"
+& "C:\Program Files\Git\bin\bash.exe" -c "netstat -ano | grep 8080"
+& "C:\Program Files\Git\bin\bash.exe" -c "curl --max-time 10 http://localhost:8080/api/v1/health"
+
+# ❌ WRONG: Never use PowerShell commands directly
+# tasklist | findstr java.exe  # ← FORBIDDEN
+# netstat -ano | findstr :8080  # ← FORBIDDEN
+# $env:VARIABLE="value"  # ← FORBIDDEN
+```
+
+### Git Bash command replacements (MANDATORY):
+- `tasklist` → `& "C:\Program Files\Git\bin\bash.exe" -c "ps aux"`
+- `findstr` → `& "C:\Program Files\Git\bin\bash.exe" -c "grep"`
+- `netstat -ano | findstr` → `& "C:\Program Files\Git\bin\bash.exe" -c "netstat -ano | grep"`
+- `Get-Process` → `& "C:\Program Files\Git\bin\bash.exe" -c "ps aux"`
+- `$env:VAR` → Use Git Bash: `VARIABLE=value command`
+
 ## 🐳 Docker Files Organization (STRICT RULE)
 **ALL Docker-related files MUST be placed in the `docker/` directory**
 

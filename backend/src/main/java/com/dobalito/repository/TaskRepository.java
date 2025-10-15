@@ -5,6 +5,7 @@ import com.dobalito.entity.TaskStatus;
 import com.dobalito.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,14 +41,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // Find tasks with pagination
     Page<Task> findByStatusOrderByCreatedAtDesc(TaskStatus status, Pageable pageable);
     
-    // Find open tasks with pagination
+    // Find open tasks with pagination (with eager loading для избежания N+1)
+    @EntityGraph(attributePaths = {"creator", "category"})
     Page<Task> findByStatusAndExecutorIsNullOrderByCreatedAtDesc(TaskStatus status, Pageable pageable);
     
     // Find tasks by creator with pagination
     @Query("SELECT t FROM Task t WHERE t.creator = :creator ORDER BY t.createdAt DESC")
     Page<Task> findByCreator(@Param("creator") User creator, Pageable pageable);
     
-    // Find tasks by executor with pagination
+    // Find tasks by creator with pagination - method name version (with eager loading)
+    @EntityGraph(attributePaths = {"creator", "executor", "category"})
+    Page<Task> findByCreatorOrderByCreatedAtDesc(User creator, Pageable pageable);
+    
+    // Find tasks by executor with pagination (with eager loading)
+    @EntityGraph(attributePaths = {"creator", "executor", "category"})
     @Query("SELECT t FROM Task t WHERE t.executor = :executor ORDER BY t.createdAt DESC")
     Page<Task> findByExecutor(@Param("executor") User executor, Pageable pageable);
     
@@ -67,4 +74,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     
     // Count open tasks
     long countByStatusAndExecutorIsNull(TaskStatus status);
+    
+    // Find open tasks by creator with pagination (with eager loading)
+    @EntityGraph(attributePaths = {"creator", "executor", "category"})
+    Page<Task> findByCreatorAndStatusOrderByCreatedAtDesc(User creator, TaskStatus status, Pageable pageable);
+    
+    // Find tasks by creator and status in list (OPEN + IN_PROGRESS for "open tasks")
+    @EntityGraph(attributePaths = {"creator", "executor", "category"})
+    @Query("SELECT t FROM Task t WHERE t.creator = :creator AND t.status IN :statuses ORDER BY t.createdAt DESC")
+    Page<Task> findByCreatorAndStatusIn(@Param("creator") User creator, @Param("statuses") List<TaskStatus> statuses, Pageable pageable);
 }

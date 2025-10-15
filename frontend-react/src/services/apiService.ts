@@ -268,6 +268,21 @@ export const apiService = {
     return response.data;
   },
 
+  async getMyOpenTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks/my/open?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
+  async getMyClosedTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks/my/closed?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
+  async getMyTasksByStatus(status: string, page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
+    const response = await api.get(`/tasks/my/status/${status}?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
+    return response.data;
+  },
+
   async getOpenTasks(page = 0, size = 10, sortBy = 'createdAt', sortDir = 'desc') {
     const response = await api.get(`/tasks/open?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`);
     return response.data;

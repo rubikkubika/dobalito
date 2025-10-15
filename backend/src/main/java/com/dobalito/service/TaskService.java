@@ -108,26 +108,14 @@ public class TaskService {
         return taskRepository.findByStatusAndExecutorIsNullOrderByCreatedAtDesc(TaskStatus.OPEN, pageable);
     }
     
-    // Get tasks by creator with pagination (simplified version)
+    // Get tasks by creator with pagination (optimized version)
     @Transactional(readOnly = true)
     public Page<Task> getTasksByCreatorWithPagination(Long creatorId, Pageable pageable) {
         User creator = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         
-        // Получаем все задания пользователя
-        List<Task> allTasks = taskRepository.findByCreatorOrderByCreatedAtDesc(creator);
-        
-        // Создаем простую пагинацию
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), allTasks.size());
-        
-        List<Task> pageContent = allTasks.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(
-            pageContent, 
-            pageable, 
-            allTasks.size()
-        );
+        // Используем нативную пагинацию Spring Data - запрос к БД только нужных записей
+        return taskRepository.findByCreatorOrderByCreatedAtDesc(creator, pageable);
     }
     
     // Get tasks by executor with pagination
@@ -136,6 +124,32 @@ public class TaskService {
         User executor = userRepository.findById(executorId)
                 .orElseThrow(() -> new RuntimeException("Исполнитель не найден"));
         return taskRepository.findByExecutor(executor, pageable);
+    }
+    
+    // Get open tasks by creator with pagination (OPEN + IN_PROGRESS)
+    @Transactional(readOnly = true)
+    public Page<Task> getOpenTasksByCreatorWithPagination(Long creatorId, Pageable pageable) {
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        List<TaskStatus> openStatuses = List.of(TaskStatus.OPEN, TaskStatus.IN_PROGRESS);
+        return taskRepository.findByCreatorAndStatusIn(creator, openStatuses, pageable);
+    }
+    
+    // Get closed tasks by creator with pagination (COMPLETED + CANCELLED)
+    @Transactional(readOnly = true)
+    public Page<Task> getClosedTasksByCreatorWithPagination(Long creatorId, Pageable pageable) {
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        List<TaskStatus> closedStatuses = List.of(TaskStatus.COMPLETED, TaskStatus.CANCELLED);
+        return taskRepository.findByCreatorAndStatusIn(creator, closedStatuses, pageable);
+    }
+    
+    // Get tasks by creator and specific status with pagination
+    @Transactional(readOnly = true)
+    public Page<Task> getTasksByCreatorAndStatusWithPagination(Long creatorId, TaskStatus status, Pageable pageable) {
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        return taskRepository.findByCreatorAndStatusOrderByCreatedAtDesc(creator, status, pageable);
     }
     
     // Update task

@@ -1,5 +1,6 @@
 package com.dobalito.controller;
 
+import com.dobalito.dto.ApiResponse;
 import com.dobalito.dto.TaskDto;
 import com.dobalito.entity.Task;
 import com.dobalito.entity.TaskStatus;
@@ -52,23 +53,15 @@ public class TaskController {
     
     // Create a new task
     @PostMapping
-    public ResponseEntity<?> createTask(@Valid @RequestBody TaskDto taskDto) {
+    public ResponseEntity<ApiResponse<Task>> createTask(@Valid @RequestBody TaskDto taskDto) {
         try {
             Long creatorId = getCurrentUserId();
             Task task = taskService.createTask(taskDto, creatorId);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Задание успешно создано");
-            response.put("task", task);
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("Задание успешно создано", task));
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Ошибка при создании задания: " + e.getMessage());
-            
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Ошибка при создании задания: " + e.getMessage()));
         }
     }
     
@@ -141,6 +134,103 @@ public class TaskController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Ошибка при получении моих заданий: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // Get my open tasks (created by current user with status OPEN + IN_PROGRESS) with pagination
+    @GetMapping("/my/open")
+    public ResponseEntity<?> getMyOpenTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        try {
+            Long userId = getCurrentUserId();
+            Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+            Pageable pageable = PageRequest.of(page, size, sort);
+            
+            Page<Task> tasks = taskService.getOpenTasksByCreatorWithPagination(userId, pageable);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("tasks", tasks.getContent());
+            response.put("totalElements", tasks.getTotalElements());
+            response.put("totalPages", tasks.getTotalPages());
+            response.put("currentPage", tasks.getNumber());
+            response.put("size", tasks.getSize());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка при получении моих открытых заданий: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // Get my closed tasks (created by current user with status COMPLETED + CANCELLED) with pagination
+    @GetMapping("/my/closed")
+    public ResponseEntity<?> getMyClosedTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        try {
+            Long userId = getCurrentUserId();
+            Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+            Pageable pageable = PageRequest.of(page, size, sort);
+            
+            Page<Task> tasks = taskService.getClosedTasksByCreatorWithPagination(userId, pageable);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("tasks", tasks.getContent());
+            response.put("totalElements", tasks.getTotalElements());
+            response.put("totalPages", tasks.getTotalPages());
+            response.put("currentPage", tasks.getNumber());
+            response.put("size", tasks.getSize());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка при получении моих закрытых заданий: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // Get my tasks by specific status with pagination
+    @GetMapping("/my/status/{status}")
+    public ResponseEntity<?> getMyTasksByStatus(
+            @PathVariable TaskStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        try {
+            Long userId = getCurrentUserId();
+            Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+            Pageable pageable = PageRequest.of(page, size, sort);
+            
+            Page<Task> tasks = taskService.getTasksByCreatorAndStatusWithPagination(userId, status, pageable);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("tasks", tasks.getContent());
+            response.put("totalElements", tasks.getTotalElements());
+            response.put("totalPages", tasks.getTotalPages());
+            response.put("currentPage", tasks.getNumber());
+            response.put("size", tasks.getSize());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Ошибка при получении заданий по статусу: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -219,21 +309,28 @@ public class TaskController {
     
     // Update task
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable Long id, @Valid @RequestBody TaskDto taskDto) {
+    public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable Long id, @Valid @RequestBody TaskDto taskDto) {
         try {
+            Long currentUserId = getCurrentUserId();
+            
+            // Проверяем, что задание существует и пользователь - его автор
+            Optional<Task> existingTask = taskService.getTaskById(id);
+            if (existingTask.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Задание не найдено"));
+            }
+            
+            if (!existingTask.get().getCreator().getId().equals(currentUserId)) {
+                return ResponseEntity.status(403)
+                        .body(ApiResponse.error("Нет прав на редактирование этого задания"));
+            }
+            
             Task task = taskService.updateTask(id, taskDto);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Задание успешно обновлено");
-            response.put("task", task);
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("Задание успешно обновлено", task));
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Ошибка при обновлении задания: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Ошибка при обновлении задания: " + e.getMessage()));
         }
     }
     
@@ -279,20 +376,28 @@ public class TaskController {
     
     // Delete task
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long id) {
         try {
+            Long currentUserId = getCurrentUserId();
+            
+            // Проверяем, что задание существует и пользователь - его автор
+            Optional<Task> existingTask = taskService.getTaskById(id);
+            if (existingTask.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Задание не найдено"));
+            }
+            
+            if (!existingTask.get().getCreator().getId().equals(currentUserId)) {
+                return ResponseEntity.status(403)
+                        .body(ApiResponse.error("Нет прав на удаление этого задания"));
+            }
+            
             taskService.deleteTask(id);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Задание успешно удалено");
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("Задание успешно удалено", null));
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Ошибка при удалении задания: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Ошибка при удалении задания: " + e.getMessage()));
         }
     }
     

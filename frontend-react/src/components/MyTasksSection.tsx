@@ -5,10 +5,12 @@ import {
 } from '@mui/material';
 import { useLanguage } from '../context/LanguageContext';
 
+type TaskFilterType = 'open' | 'closed' | 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
 interface MyTasksSectionProps {
   className?: string;
-  onTaskTypeClick?: (type: 'open' | 'closed') => void;
-  activeTaskType?: 'open' | 'closed';
+  onTaskTypeClick?: (type: TaskFilterType) => void;
+  activeTaskType?: TaskFilterType;
 }
 
 const MyTasksSection: React.FC<MyTasksSectionProps> = ({ 
@@ -19,8 +21,10 @@ const MyTasksSection: React.FC<MyTasksSectionProps> = ({
   const { t } = useLanguage();
 
   const taskTypes = [
-    { id: 'open', name: t('home.open_tasks'), color: '#4CAF50', icon: '📋' },
-    { id: 'closed', name: t('home.closed_tasks'), color: '#757575', icon: '✅' },
+    { id: 'OPEN', name: t('task.status.open'), color: '#4CAF50', icon: '📋' },
+    { id: 'IN_PROGRESS', name: t('task.status.in_progress'), color: '#FF9800', icon: '⏳' },
+    { id: 'COMPLETED', name: t('task.status.completed'), color: '#2196F3', icon: '✅' },
+    { id: 'CANCELLED', name: t('task.status.cancelled'), color: '#F44336', icon: '❌' },
   ];
 
   return (
@@ -52,7 +56,7 @@ const MyTasksSection: React.FC<MyTasksSectionProps> = ({
           return (
             <Box
               key={taskType.id}
-              onClick={() => onTaskTypeClick?.(taskType.id as 'open' | 'closed')}
+              onClick={() => onTaskTypeClick?.(taskType.id as TaskFilterType)}
               sx={{
                 p: { xs: 1, sm: 1.5 },
                 borderRadius: '8px',

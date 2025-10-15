@@ -49,3 +49,17 @@ export interface Executor {
   description?: string;
   skills?: string[];
 }
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string | null;
+  creator: User;
+  executor: User | null;
+  category: Category;
+}
