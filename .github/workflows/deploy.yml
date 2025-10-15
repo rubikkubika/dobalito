@@ -82,8 +82,29 @@ jobs:
     needs: test-migrations
     outputs:
       image: ${{ steps.meta.outputs.tags }}
+      changed: ${{ steps.backend-changes.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Нужно для сравнения с предыдущим коммитом
+      
+      - name: Check for backend changes
+        id: backend-changes
+        run: |
+          # Проверяем, есть ли предыдущий коммит
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            if git diff --quiet HEAD~1 HEAD -- backend/ docker/Dockerfile.backend docker/docker-compose*.yml; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "No backend changes detected, skipping build"
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "Backend changes detected, will build"
+            fi
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "First commit detected, will build"
+          fi
+      
       - uses: docker/setup-buildx-action@v3
       - run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
@@ -96,6 +117,7 @@ jobs:
 
       - name: Set metadata
         id: meta
+        if: steps.backend-changes.outputs.changed == 'true'
         uses: docker/metadata-action@v5
         with:
           images: retsko.ru/${{ env.BACKEND_IMAGE }}
@@ -105,6 +127,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & Push Backend
+        if: steps.backend-changes.outputs.changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -120,8 +143,29 @@ jobs:
     needs: test-migrations
     outputs:
       image: ${{ steps.meta.outputs.tags }}
+      changed: ${{ steps.frontend-changes.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Нужно для сравнения с предыдущим коммитом
+      
+      - name: Check for frontend changes
+        id: frontend-changes
+        run: |
+          # Проверяем, есть ли предыдущий коммит
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            if git diff --quiet HEAD~1 HEAD -- frontend-react/ docker/Dockerfile.frontend-react docker/nginx-react.conf; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "No frontend changes detected, skipping build"
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "Frontend changes detected, will build"
+            fi
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "First commit detected, will build"
+          fi
+      
       - uses: docker/setup-buildx-action@v3
       - run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
@@ -134,6 +178,7 @@ jobs:
 
       - name: Set metadata
         id: meta
+        if: steps.frontend-changes.outputs.changed == 'true'
         uses: docker/metadata-action@v5
         with:
           images: retsko.ru/${{ env.FRONTEND_IMAGE }}
@@ -143,6 +188,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & Push Frontend
+        if: steps.frontend-changes.outputs.changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -161,7 +207,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check if deployment needed
+        id: deploy-needed
+        run: |
+          if [[ "${{ needs.build-backend.outputs.changed }}" == "true" || "${{ needs.build-frontend.outputs.changed }}" == "true" ]]; then
+            echo "deploy=true" >> $GITHUB_OUTPUT
+            echo "Changes detected, deployment needed"
+          else
+            echo "deploy=false" >> $GITHUB_OUTPUT
+            echo "No changes detected, skipping deployment"
+          fi
+
       - name: Deploy to server
+        if: steps.deploy-needed.outputs.deploy == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
