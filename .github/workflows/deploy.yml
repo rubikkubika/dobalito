@@ -3,9 +3,7 @@ name: Deploy to Production
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Позволяет запускать вручную
-
-# Trigger GitHub Actions
+  workflow_dispatch:
 
 env:
   REGISTRY_URL: https://retsko.ru
@@ -13,438 +11,173 @@ env:
   FRONTEND_IMAGE: dobalito-frontend
 
 jobs:
+  # --- 1. Проверка и подготовка инфраструктуры ---
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy base infrastructure
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 300s
+          script: |
+            set -e
+            sudo mkdir -p /opt/dobalito/docker
+            sudo chown $USER:$USER /opt/dobalito
+            cd /opt/dobalito
+
+            echo "=== Pulling base images ==="
+            docker pull postgres:15-alpine &
+            docker pull nginx:alpine &
+            wait
+
+            echo "=== Starting DB and Nginx ==="
+            docker compose -f docker/docker-compose.prod.yml up -d postgres nginx
+
+            sleep 10
+            echo "=== Checking DB existence ==="
+            docker exec -e PGPASSWORD=${{ env.POSTGRES_PASSWORD }} dobalito-postgres \
+              psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='dobalito'" | grep -q 1 || \
+              docker exec -e PGPASSWORD=${{ env.POSTGRES_PASSWORD }} dobalito-postgres \
+              psql -U postgres -c "CREATE DATABASE dobalito;"
+
+  # --- 2. Проверяем миграции Flyway ---
   test-migrations:
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
     env:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Test Flyway migrations on server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 300s
-        script: |
-          # Передаем переменную окружения в SSH сессию
-          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
-          
-          cd /opt/dobalito
-          
-          echo "=== Testing Flyway Migrations ==="
-          echo "POSTGRES_PASSWORD is set: ${POSTGRES_PASSWORD:+yes}"
-          
-          # Проверяем состояние базы данных
-          TABLE_COUNT=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
-          
-          if [ "$TABLE_COUNT" = "0" ]; then
-            echo "Database is empty - running Flyway migrations..."
-            RUN_MIGRATIONS=true
-          else
-            echo "Database contains $TABLE_COUNT tables - checking if migrations needed..."
-            
-            # Проверяем есть ли таблица flyway_schema_history
-            FLYWAY_TABLE_EXISTS=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'flyway_schema_history';" 2>/dev/null | tr -d ' \n' || echo "0")
-            
-            if [ "$FLYWAY_TABLE_EXISTS" = "0" ]; then
-              echo "No Flyway history table found - database was created manually, skipping migrations"
-              RUN_MIGRATIONS=false
-            else
-              echo "Flyway history table exists - checking migration status..."
-              RUN_MIGRATIONS=true
-            fi
-          fi
-          
-          if [ "$RUN_MIGRATIONS" = "true" ]; then
-              echo "Installing Java and Maven for migration testing..."
-            sudo apt-get update
-            sudo apt-get install -y openjdk-17-jdk maven
-            
-            echo "Setting JAVA_HOME..."
-            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-            
-            echo "Compiling project to ensure migrations are available..."
-            cd /tmp
-            git clone https://github.com/rubikkubika/dobalito.git test-migrations
-            cd test-migrations/backend
-            
-            echo "Running Flyway migrations..."
-            mvn flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/dobalito -Dflyway.user=postgres -Dflyway.password=$POSTGRES_PASSWORD
-            
-            echo "Checking migration results..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
-            
-            echo "Checking table structures..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
-            
-            echo "Checking users table has date_of_birth column..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
-            
-            echo "Checking if phone_verification_codes table exists..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'phone_verification_codes';"
-            
-            echo "Testing data insertion..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01');"
-            
-            echo "Testing phone verification code insertion..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
-            
-            echo "Verifying test data..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
-            
-            echo "Cleaning up test files..."
-            cd /
-            rm -rf /tmp/test-migrations
-          else
-            echo "Skipping migrations - database already has data and no Flyway history"
-            echo "Checking existing table structures..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
-            
-            echo "Checking if users table has date_of_birth column..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';" || echo "date_of_birth column not found in existing database"
-          fi
+      - uses: actions/checkout@v4
 
-  deploy-infrastructure:
-    runs-on: ubuntu-latest
-    env:
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Prepare server directories
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 60s
-        script: |
-          sudo mkdir -p /opt/dobalito/docker
-          sudo chown $USER:$USER /opt/dobalito
-    
-    - name: Copy docker-compose.prod.yml to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "docker/docker-compose.prod.yml"
-        target: "/opt/dobalito/docker/"
-        strip_components: 1
-    
-    - name: Copy nginx.conf to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "docker/nginx.conf"
-        target: "/opt/dobalito/docker/"
-        strip_components: 1
-    
-    # env.production уже настроен на сервере
-    
-    - name: Deploy infrastructure
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 300s
-        script: |
-          # Передаем переменную окружения в SSH сессию
-          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
-          
-          cd /opt/dobalito
-          
-          # Переменные окружения уже настроены на сервере
-          # Проверяем наличие .env файла
-          if [ ! -f .env ]; then
-            echo "Warning: .env file not found on server"
-          else
-            echo ".env file exists on server"
-          fi
-          
-          # Параллельная загрузка Docker образов для ускорения процесса
-          echo "=== Pre-pulling Docker images in parallel ==="
-          docker pull postgres:15-alpine &
-          docker pull nginx:alpine &
-          wait
-          echo "=== Docker images ready ==="
-          
-          # Останавливаем только наши сервисы, НЕ трогаем registry
-          docker-compose -f docker/docker-compose.prod.yml down || true
-          
-          # Удаляем только orphan контейнеры НАШЕГО проекта (не registry)
-          docker ps -a --filter "name=dobalito-" --filter "status=exited" -q | xargs -r docker rm || true
-          
-          # Запускаем только инфраструктуру (postgres, nginx)
-          docker-compose -f docker/docker-compose.prod.yml up -d postgres nginx
-          
-          # Ждем запуска PostgreSQL
-          sleep 15
-          
-          # Проверяем существует ли база данных
-          echo "=== Checking database existence ==="
-          DB_EXISTS=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -t -c "SELECT 1 FROM pg_database WHERE datname = 'dobalito';" 2>/dev/null | tr -d ' \n' || echo "")
-          
-          if [ -z "$DB_EXISTS" ]; then
-            echo "Creating new database for Flyway migrations..."
-            docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -c "CREATE DATABASE dobalito;"
-            echo "Database created successfully"
-          else
-            echo "Database 'dobalito' already exists"
-            
-            # Проверяем есть ли в ней таблицы
-            TABLE_COUNT=$(docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' \n' || echo "0")
-            
-            if [ "$TABLE_COUNT" = "0" ]; then
-              echo "Database exists but is empty - ready for migrations"
-            else
-              echo "Database contains $TABLE_COUNT tables - migrations will be handled by Flyway"
-            fi
-          fi
-          
-          # НЕ выполняем init.sql - Flyway создаст схему, DataLoader загрузит данные
-          echo "=== Database ready for Flyway migrations ==="
-          
-          # Проверяем что база данных готова для миграций
-          echo "=== Database verification ==="
-          echo "List of databases:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -c "\l"
-          
-          echo "Database connection test:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT current_database(), current_user, version();"
-          
-          echo "Checking that database is empty (no tables yet):"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt" || echo "No tables found (expected for empty database)"
-          
-          # Flyway таблицы будут созданы в test-migrations job
-          echo "=== Database ready for Flyway migrations ==="
-          
-          # Проверяем статус
-          echo "=== Infrastructure status ==="
-          docker ps -a
-          
-          # Диагностика сети для registry
-          echo "=== Network diagnostics ==="
-          echo "Docker bridge IP:"
-          docker network inspect bridge | grep Gateway || echo "Gateway not found"
-          echo "Host IP addresses:"
-          ip route | grep default | awk '{print $3}' || echo "Default route not found"
-          echo "Registry connectivity test:"
-          curl -u admin:root http://172.17.0.1:5000/v2/ && echo "Registry accessible via bridge IP" || echo "Registry not accessible via bridge IP"
-          curl -u admin:root http://89.208.14.20:5000/v2/ && echo "Registry accessible via host IP" || echo "Registry not accessible via host IP"
-          
-          # Проверяем статус upstream в Nginx
-          echo "=== Nginx upstream status ==="
-          docker exec dobalito-nginx nginx -T | grep -A 10 "upstream registry_backend" || echo "Upstream config not found"
-          
-          # Ждем стабилизации Nginx
-          echo "=== Waiting for Nginx to stabilize ==="
-          sleep 15
-          docker ps --filter "name=dobalito-nginx"
-          
-          # Проверяем логи Nginx для диагностики
-          echo "=== Nginx logs ==="
-          docker logs dobalito-nginx --tail 20
-          
-          # Проверяем подключение из Nginx контейнера к registry (с аутентификацией)
-          echo "=== Testing registry connection from Nginx container ==="
-          docker exec dobalito-nginx curl -u admin:root http://172.17.0.1:5000/v2/ && echo "Registry accessible from Nginx via bridge IP" || echo "Registry NOT accessible from Nginx via bridge IP"
-          docker exec dobalito-nginx curl -u admin:root http://89.208.14.20:5000/v2/ && echo "Registry accessible from Nginx via host IP" || echo "Registry NOT accessible from Nginx via host IP"
-          
-          # Проверяем логи Nginx
-          docker exec dobalito-nginx cat /var/log/nginx/registry_access.log 2>/dev/null || echo "Registry access log not found"
-          docker exec dobalito-nginx cat /var/log/nginx/registry_error.log 2>/dev/null || echo "Registry error log not found"
-          
-          # Проверяем, что registry работает
-          echo "=== Registry status ==="
-          docker ps --filter "name=registry" || echo "Registry not found in docker ps"
-          curl -u admin:root https://retsko.ru/v2/ && echo "Registry accessible via HTTPS" || echo "Registry not accessible via HTTPS"
+      - name: Run Flyway migrations
+        run: |
+          docker run --rm \
+            -v $PWD/backend/src/main/resources/db/migration:/flyway/sql \
+            flyway/flyway:9-alpine \
+            -url=jdbc:postgresql://${{ secrets.SERVER_HOST }}:5432/dobalito \
+            -user=postgres \
+            -password=${{ secrets.POSTGRES_PASSWORD }} \
+            migrate
 
-  build-images:
+  # --- 3. Сборка backend ---
+  build-backend:
     runs-on: ubuntu-latest
-    needs: deploy-infrastructure
+    needs: test-migrations
     outputs:
-      backend-image: ${{ steps.meta.outputs.tags }}
-      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
-    
+      image: ${{ steps.meta.outputs.tags }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      with:
-        driver-opts: |
-          image=moby/buildkit:latest
-          network=host
-    
-    - name: Configure Docker BuildKit
-      run: |
-        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
-    
-    - name: Login to Private Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY_URL }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: retsko.ru/${{ env.BACKEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Backend
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./backend/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha,scope=backend
-        cache-to: type=gha,scope=backend,mode=max
-    
-    - name: Extract metadata for frontend
-      id: meta-frontend
-      uses: docker/metadata-action@v5
-      with:
-        images: retsko.ru/${{ env.FRONTEND_IMAGE }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push Frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./docker/Dockerfile.frontend-react
-        push: true
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        cache-from: type=gha,scope=frontend
-        cache-to: type=gha,scope=frontend,mode=max
-        no-cache: true
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Set metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: retsko.ru/${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=dobalito-backend
+          cache-to: type=gha,scope=dobalito-backend,mode=max
+
+  # --- 4. Сборка frontend ---
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: test-migrations
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Set metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: retsko.ru/${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend-react
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=dobalito-frontend
+          cache-to: type=gha,scope=dobalito-frontend,mode=max
+
+  # --- 5. Деплой ---
   deploy-applications:
     runs-on: ubuntu-latest
-    needs: build-images
-    env:
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-    
+    needs: [build-backend, build-frontend]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy applications to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        timeout: 300s
-        script: |
-          # Передаем переменную окружения в SSH сессию
-          export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
-          
-          cd /opt/dobalito
-          
-          # Логинимся в приватный registry
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-          
-          # Предварительно загружаем образы приложений
-          echo "=== Pre-pulling application images ==="
-          echo "Checking existing application images..."
-          docker images | grep dobalito-backend || echo "Backend image not found"
-          docker images | grep dobalito-frontend || echo "Frontend image not found"
-          
-          # Принудительно обновляем образы из registry
-          echo "Pulling latest application images..."
-          docker-compose -f docker/docker-compose.prod.yml pull backend frontend-react
-          
-          echo "=== Application images ready ==="
-          
-          # Запускаем приложения (backend и frontend)
-          docker-compose -f docker/docker-compose.prod.yml up -d backend frontend-react
-          
-          # Ждем запуска и проверяем health
-          sleep 30
-          
-          # Проверяем версии образов
-          echo "=== Checking image versions ==="
-          docker images | grep dobalito
-          
-          # Проверяем статус контейнеров
-          echo "=== Docker containers status ==="
-          docker ps -a
-          
-          # Проверяем логи backend
-          echo "=== Backend logs ==="
-          docker logs dobalito-backend --tail 50
-          
-          # Проверяем Flyway миграции
-          echo "=== Flyway Migration Verification ==="
-          echo "Checking flyway_schema_history table:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
-          
-          echo "Checking if all tables were created by Flyway:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\dt"
-          
-          echo "Checking users table structure (should include date_of_birth):"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d users"
-          
-          echo "Checking categories table structure:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d categories"
-          
-          echo "Checking tasks table structure:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d tasks"
-          
-          echo "Checking phone_verification_codes table structure:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "\d phone_verification_codes"
-          
-          echo "Checking if date_of_birth column exists in users table:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'date_of_birth';"
-          
-          echo "Testing data insertion with new field:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO users (name, email, date_of_birth) VALUES ('Test User', 'test@example.com', '1990-01-01') ON CONFLICT (email) DO NOTHING;"
-          
-          echo "Testing phone verification code insertion:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "INSERT INTO phone_verification_codes (phone, code, expires_at) VALUES ('+1234567890', '123456', NOW() + INTERVAL '10 minutes');"
-          
-          echo "Verifying test data:"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, name, email, date_of_birth FROM users WHERE email = 'test@example.com';"
-          docker exec -e PGPASSWORD=$POSTGRES_PASSWORD dobalito-postgres psql -U postgres -d dobalito -c "SELECT id, phone, code, expires_at, is_used FROM phone_verification_codes WHERE phone = '+1234567890';"
-          
-          # Проверяем health check
-          echo "=== Health check ==="
-          curl -f http://localhost:8080/api/v1/auth/test || echo "Backend health check failed"
-          curl -f https://retsko.ru/api/v1/auth/test || echo "Nginx proxy health check failed"
-          
-          echo "Deployment successful!"
-    
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+      - uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 300s
+          script: |
+            set -e
+            cd /opt/dobalito
+
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+
+            echo "=== Pulling latest images ==="
+            docker compose -f docker/docker-compose.prod.yml pull --parallel backend frontend-react
+
+            echo "=== Restarting containers ==="
+            docker compose -f docker/docker-compose.prod.yml up -d backend frontend-react
+
+            echo "=== Checking health ==="
+            docker ps --filter "name=dobalito"
+            curl -f http://localhost:8080/api/v1/auth/test || echo "Backend health check failed"
+            curl -f http://localhost:3000 || echo "Frontend health check failed"
+
+      - name: Notify status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+          fi

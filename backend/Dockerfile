@@ -1,36 +1,46 @@
-# Multi-stage build for Spring Boot app
-# Stage 1: Build with Maven
+# ============================
+# Stage 1 — Build with Maven
+# ============================
 FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 
-# Set working directory
+# Рабочая директория
 WORKDIR /app
 
-# Copy pom.xml first for better caching
-COPY backend/pom.xml .
+# 1️⃣ Копируем pom.xml и settings.xml для кэша зависимостей
+COPY backend/pom.xml ./
 
-# Download dependencies (this layer will be cached if pom.xml doesn't change)
-RUN mvn dependency:go-offline -B
+# 2️⃣ Предзагружаем зависимости (кэшируется отдельно от исходников)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B dependency:go-offline
 
-# Copy source code
+# 3️⃣ Копируем исходники
 COPY backend/src ./src
 
-# Build the application
-RUN mvn clean package -DskipTests -B
+# 4️⃣ Собираем JAR, используя кэш Maven
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B clean package -DskipTests
 
-# Stage 2: Runtime
+# ============================
+# Stage 2 — Runtime
+# ============================
 FROM eclipse-temurin:17-jre-alpine AS production
 
-# Install curl for healthcheck
+# Минимальный образ с утилитами
 RUN apk add --no-cache curl
 
-# Set working directory
 WORKDIR /app
 
-# Copy built jar from builder stage
-COPY --from=builder /app/target/dobalito-backend-1.0.1.jar app.jar
+# 5️⃣ Копируем собранный JAR из builder stage
+COPY --from=builder /app/target/*.jar app.jar
 
-# Expose port
+# 6️⃣ Прописываем переменные окружения (опционально)
+ENV JAVA_OPTS="-Xms256m -Xmx512m"
+
+# 7️⃣ Healthcheck для Kubernetes / Compose
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "app.jar"]
+# 8️⃣ Запуск приложения
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
