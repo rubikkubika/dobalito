@@ -56,6 +56,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Repair Flyway schema history
+        run: |
+          docker run --rm \
+            -v $PWD/backend/src/main/resources/db/migration:/flyway/sql \
+            flyway/flyway:9-alpine \
+            -url=jdbc:postgresql://${{ secrets.SERVER_HOST }}:5432/dobalito \
+            -user=postgres \
+            -password=${{ secrets.POSTGRES_PASSWORD }} \
+            repair
+
       - name: Run Flyway migrations
         run: |
           docker run --rm \
@@ -146,6 +156,8 @@ jobs:
   deploy-applications:
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -161,6 +173,15 @@ jobs:
             cd /opt/dobalito
 
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+
+            echo "=== Repairing Flyway schema history ==="
+            docker run --rm \
+              -v /opt/dobalito/backend/src/main/resources/db/migration:/flyway/sql \
+              flyway/flyway:9-alpine \
+              -url=jdbc:postgresql://localhost:5432/dobalito \
+              -user=postgres \
+              -password="${{ secrets.POSTGRES_PASSWORD }}" \
+              repair
 
             echo "=== Pulling latest images ==="
             docker compose -f docker/docker-compose.prod.yml pull --parallel backend frontend-react
