@@ -1,5 +1,6 @@
 const esbuild = require('esbuild');
 const path = require('path');
+const fs = require('fs');
 
 const config = {
   entryPoints: ['src/index.tsx'],
@@ -18,36 +19,36 @@ const config = {
     '.js': 'js',
     '.jsx': 'jsx',
     '.css': 'css'
-  },
-  plugins: [{
-    name: 'serve',
-    setup(build) {
-      build.onStart(() => {
-        console.log('🚀 Starting esbuild dev server...');
-      });
-    }
-  }]
+  }
 };
 
-// Запуск dev сервера с watch режимом
-esbuild.build({
-  ...config,
-  watch: {
-    onRebuild(error, result) {
-      if (error) console.error('❌ Watch build failed:', error);
-      else console.log('✅ Watch build succeeded');
-    },
-  },
-}).then(result => {
+console.log('🚀 Starting esbuild dev server...');
+
+// Используем context для watch режима
+esbuild.context(config).then(async ctx => {
   console.log('✅ Initial build completed');
+  
+  // Запускаем watch режим
+  await ctx.watch();
+  console.log('✅ Watch mode started');
   
   // Запускаем простой HTTP сервер
   const http = require('http');
-  const fs = require('fs');
-  const path = require('path');
   
   const server = http.createServer((req, res) => {
-    let filePath = path.join(__dirname, '..', 'public', req.url === '/' ? 'index.html' : req.url);
+    let filePath;
+    
+    // Обрабатываем разные типы запросов
+    if (req.url === '/') {
+      filePath = path.join(__dirname, '..', 'public', 'index.html');
+    } else if (req.url === '/bundle.js') {
+      filePath = path.join(__dirname, '..', 'build', 'bundle.js');
+    } else if (req.url === '/bundle.css') {
+      filePath = path.join(__dirname, '..', 'build', 'bundle.css');
+    } else {
+      // Остальные статические файлы из public
+      filePath = path.join(__dirname, '..', 'public', req.url);
+    }
     
     // Если файл не найден, отдаем index.html для SPA
     if (!fs.existsSync(filePath)) {
@@ -62,6 +63,7 @@ esbuild.build({
       '.json': 'application/json',
       '.png': 'image/png',
       '.jpg': 'image/jpg',
+      '.jpeg': 'image/jpeg',
       '.gif': 'image/gif',
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon'
