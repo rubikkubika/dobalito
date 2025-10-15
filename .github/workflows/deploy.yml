@@ -82,27 +82,31 @@ jobs:
     needs: test-migrations
     outputs:
       image: ${{ steps.meta.outputs.tags }}
-      changed: ${{ steps.backend-changes.outputs.changed }}
+      hash: ${{ steps.backend-hash.outputs.hash }}
+      exists: ${{ steps.backend-image-exists.outputs.exists }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2  # Нужно для сравнения с предыдущим коммитом
       
-      - name: Check for backend changes
-        id: backend-changes
+      - name: Calculate backend content hash
+        id: backend-hash
         run: |
-          # Проверяем, есть ли предыдущий коммит
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            if git diff --quiet HEAD~1 HEAD -- backend/ docker/Dockerfile.backend docker/docker-compose*.yml; then
-              echo "changed=false" >> $GITHUB_OUTPUT
-              echo "No backend changes detected, skipping build"
-            else
-              echo "changed=true" >> $GITHUB_OUTPUT
-              echo "Backend changes detected, will build"
-            fi
+          # Создаем хэш из всех релевантных файлов для backend
+          HASH=$(find backend/ -type f -name "*.java" -o -name "*.xml" -o -name "*.yml" -o -name "*.sql" | sort | xargs md5sum | md5sum | cut -d' ' -f1)
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "Backend content hash: $HASH"
+
+      - name: Check if backend image exists in registry
+        id: backend-image-exists
+        run: |
+          # Проверяем, есть ли образ с таким хэшем в registry
+          if docker manifest inspect retsko.ru/${{ env.BACKEND_IMAGE }}:${{ steps.backend-hash.outputs.hash }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Backend image with hash ${{ steps.backend-hash.outputs.hash }} already exists in registry"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "First commit detected, will build"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Backend image with hash ${{ steps.backend-hash.outputs.hash }} not found, will build"
           fi
       
       - uses: docker/setup-buildx-action@v3
@@ -117,17 +121,16 @@ jobs:
 
       - name: Set metadata
         id: meta
-        if: steps.backend-changes.outputs.changed == 'true'
+        if: steps.backend-image-exists.outputs.exists == 'false'
         uses: docker/metadata-action@v5
         with:
           images: retsko.ru/${{ env.BACKEND_IMAGE }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
+            type=raw,value=${{ steps.backend-hash.outputs.hash }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & Push Backend
-        if: steps.backend-changes.outputs.changed == 'true'
+        if: steps.backend-image-exists.outputs.exists == 'false'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -143,27 +146,31 @@ jobs:
     needs: test-migrations
     outputs:
       image: ${{ steps.meta.outputs.tags }}
-      changed: ${{ steps.frontend-changes.outputs.changed }}
+      hash: ${{ steps.frontend-hash.outputs.hash }}
+      exists: ${{ steps.frontend-image-exists.outputs.exists }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2  # Нужно для сравнения с предыдущим коммитом
       
-      - name: Check for frontend changes
-        id: frontend-changes
+      - name: Calculate frontend content hash
+        id: frontend-hash
         run: |
-          # Проверяем, есть ли предыдущий коммит
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            if git diff --quiet HEAD~1 HEAD -- frontend-react/ docker/Dockerfile.frontend-react docker/nginx-react.conf; then
-              echo "changed=false" >> $GITHUB_OUTPUT
-              echo "No frontend changes detected, skipping build"
-            else
-              echo "changed=true" >> $GITHUB_OUTPUT
-              echo "Frontend changes detected, will build"
-            fi
+          # Создаем хэш из всех релевантных файлов для frontend
+          HASH=$(find frontend-react/ -type f -name "*.tsx" -o -name "*.ts" -o -name "*.js" -o -name "*.json" -o -name "*.css" | sort | xargs md5sum | md5sum | cut -d' ' -f1)
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "Frontend content hash: $HASH"
+
+      - name: Check if frontend image exists in registry
+        id: frontend-image-exists
+        run: |
+          # Проверяем, есть ли образ с таким хэшем в registry
+          if docker manifest inspect retsko.ru/${{ env.FRONTEND_IMAGE }}:${{ steps.frontend-hash.outputs.hash }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Frontend image with hash ${{ steps.frontend-hash.outputs.hash }} already exists in registry"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "First commit detected, will build"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Frontend image with hash ${{ steps.frontend-hash.outputs.hash }} not found, will build"
           fi
       
       - uses: docker/setup-buildx-action@v3
@@ -178,17 +185,16 @@ jobs:
 
       - name: Set metadata
         id: meta
-        if: steps.frontend-changes.outputs.changed == 'true'
+        if: steps.frontend-image-exists.outputs.exists == 'false'
         uses: docker/metadata-action@v5
         with:
           images: retsko.ru/${{ env.FRONTEND_IMAGE }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
+            type=raw,value=${{ steps.frontend-hash.outputs.hash }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build & Push Frontend
-        if: steps.frontend-changes.outputs.changed == 'true'
+        if: steps.frontend-image-exists.outputs.exists == 'false'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -210,12 +216,14 @@ jobs:
       - name: Check if deployment needed
         id: deploy-needed
         run: |
-          if [[ "${{ needs.build-backend.outputs.changed }}" == "true" || "${{ needs.build-frontend.outputs.changed }}" == "true" ]]; then
+          if [[ "${{ needs.build-backend.outputs.exists }}" == "false" || "${{ needs.build-frontend.outputs.exists }}" == "false" ]]; then
             echo "deploy=true" >> $GITHUB_OUTPUT
-            echo "Changes detected, deployment needed"
+            echo "New images detected, deployment needed"
+            echo "Backend exists: ${{ needs.build-backend.outputs.exists }}"
+            echo "Frontend exists: ${{ needs.build-frontend.outputs.exists }}"
           else
             echo "deploy=false" >> $GITHUB_OUTPUT
-            echo "No changes detected, skipping deployment"
+            echo "All images already exist, skipping deployment"
           fi
 
       - name: Deploy to server
@@ -241,8 +249,14 @@ jobs:
               -password="${{ secrets.POSTGRES_PASSWORD }}" \
               repair
 
-            echo "=== Pulling latest images ==="
-            docker compose -f docker/docker-compose.prod.yml pull --parallel backend frontend-react
+            echo "=== Pulling images with specific hashes ==="
+            # Pull backend image with hash
+            docker pull retsko.ru/${{ env.BACKEND_IMAGE }}:${{ needs.build-backend.outputs.hash }} || echo "Backend image not found, using latest"
+            docker tag retsko.ru/${{ env.BACKEND_IMAGE }}:${{ needs.build-backend.outputs.hash }} retsko.ru/${{ env.BACKEND_IMAGE }}:latest || echo "Backend tagging failed"
+            
+            # Pull frontend image with hash  
+            docker pull retsko.ru/${{ env.FRONTEND_IMAGE }}:${{ needs.build-frontend.outputs.hash }} || echo "Frontend image not found, using latest"
+            docker tag retsko.ru/${{ env.FRONTEND_IMAGE }}:${{ needs.build-frontend.outputs.hash }} retsko.ru/${{ env.FRONTEND_IMAGE }}:latest || echo "Frontend tagging failed"
 
             echo "=== Restarting containers ==="
             docker compose -f docker/docker-compose.prod.yml up -d backend frontend-react
