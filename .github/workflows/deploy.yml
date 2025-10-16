@@ -217,8 +217,7 @@ jobs:
           file: ./docker/Dockerfile.frontend-react
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha,scope=dobalito-frontend
-          cache-to: type=gha,scope=dobalito-frontend,mode=max
+          no-cache: true
 
   # --- 5. Деплой ---
   deploy-applications:
