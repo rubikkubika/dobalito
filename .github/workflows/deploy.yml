@@ -29,6 +29,7 @@ jobs:
           script: |
             set -e
             export CONTAINER_NAME_PREFIX=dobalito
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             sudo mkdir -p /opt/dobalito/docker
             sudo chown $USER:$USER /opt/dobalito
             cd /opt/dobalito
@@ -252,6 +253,7 @@ jobs:
           script: |
             set -e
             export CONTAINER_NAME_PREFIX=dobalito
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             cd /opt/dobalito
 
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login retsko.ru -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
