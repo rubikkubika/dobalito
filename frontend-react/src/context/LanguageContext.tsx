@@ -49,6 +49,7 @@ const translations = {
     'task.status.in_progress': 'В работе',
     'task.status.completed': 'Завершено',
     'task.status.cancelled': 'Отменено',
+    'task.all_tasks': 'Все задания',
     'task.no_open_tasks': 'Нет открытых заданий',
     'task.no_closed_tasks': 'Нет закрытых заданий',
     
@@ -145,6 +146,7 @@ const translations = {
     'task.status.in_progress': 'In Progress',
     'task.status.completed': 'Completed',
     'task.status.cancelled': 'Cancelled',
+    'task.all_tasks': 'All Tasks',
     'task.no_open_tasks': 'No open tasks',
     'task.no_closed_tasks': 'No closed tasks',
     

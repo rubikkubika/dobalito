@@ -203,14 +203,27 @@ const TasksPage: React.FC = () => {
           flex: 1,
           width: { xs: '100%', md: 'auto' }
         }}>
-          {/* Status Filter Buttons - Only for mobile */}
+          {/* Status Filter Buttons - For all screen sizes */}
           <Box sx={{ 
             mb: 3,
-            display: { xs: 'flex', md: 'none' },
+            display: 'flex',
             gap: 1,
             flexWrap: 'wrap',
             justifyContent: 'flex-start'
           }}>
+            <Button
+              variant={taskType === 'open' ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => handleStatusClick('open')}
+              sx={{
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2,
+                fontSize: '0.85rem',
+              }}
+            >
+              {t('task.all_tasks')}
+            </Button>
             <Button
               variant={taskType === 'OPEN' ? 'contained' : 'outlined'}
               size="small"
