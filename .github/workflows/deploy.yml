@@ -229,21 +229,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check if deployment needed
-        id: deploy-needed
-        run: |
-          if [[ "${{ needs.build-backend.outputs.exists }}" == "false" || "${{ needs.build-frontend.outputs.exists }}" == "false" ]]; then
-            echo "deploy=true" >> $GITHUB_OUTPUT
-            echo "New images detected, deployment needed"
-            echo "Backend exists: ${{ needs.build-backend.outputs.exists }}"
-            echo "Frontend exists: ${{ needs.build-frontend.outputs.exists }}"
-          else
-            echo "deploy=false" >> $GITHUB_OUTPUT
-            echo "All images already exist, skipping deployment"
-          fi
-
       - name: Deploy to server
-        if: steps.deploy-needed.outputs.deploy == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
