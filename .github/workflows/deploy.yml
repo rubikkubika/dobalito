@@ -253,6 +253,9 @@ jobs:
               -password="${{ secrets.POSTGRES_PASSWORD }}" \
               repair
 
+            echo "=== Cleaning old images ==="
+            docker image prune -f
+            
             echo "=== Pulling images with specific hashes ==="
             # Pull backend image with hash
             docker pull retsko.ru/${{ env.BACKEND_IMAGE }}:${{ needs.build-backend.outputs.hash }} || echo "Backend image not found, using latest"
@@ -262,8 +265,8 @@ jobs:
             docker pull retsko.ru/${{ env.FRONTEND_IMAGE }}:${{ needs.build-frontend.outputs.hash }} || echo "Frontend image not found, using latest"
             docker tag retsko.ru/${{ env.FRONTEND_IMAGE }}:${{ needs.build-frontend.outputs.hash }} retsko.ru/${{ env.FRONTEND_IMAGE }}:latest || echo "Frontend tagging failed"
 
-            echo "=== Restarting containers ==="
-            docker compose -f docker/docker-compose.prod.yml up -d backend frontend-react
+            echo "=== Restarting containers with force recreate ==="
+            docker compose -f docker/docker-compose.prod.yml up -d --force-recreate backend frontend-react
 
             echo "=== Checking health ==="
             docker ps --filter "name=dobalito"
