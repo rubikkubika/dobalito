@@ -261,6 +261,10 @@ jobs:
             docker image prune -f
             docker system prune -f
             
+            echo "=== Removing specific old images ==="
+            docker rmi retsko.ru/${{ env.BACKEND_IMAGE }}:latest || true
+            docker rmi retsko.ru/${{ env.FRONTEND_IMAGE }}:latest || true
+            
             echo "=== Pulling images with specific hashes ==="
             # Pull backend image with hash
             docker pull retsko.ru/${{ env.BACKEND_IMAGE }}:${{ needs.build-backend.outputs.hash }} || echo "Backend image not found, using latest"
@@ -272,6 +276,10 @@ jobs:
 
             echo "=== Starting backend and frontend containers ==="
             docker compose -f docker/docker-compose.prod.yml up -d backend frontend-react
+            
+            echo "=== Clearing Nginx cache ==="
+            docker exec dobalito-nginx rm -rf /var/cache/nginx/* || true
+            docker exec dobalito-nginx nginx -s reload || true
 
             echo "=== Checking health ==="
             docker ps --filter "name=dobalito"
