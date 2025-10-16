@@ -244,7 +244,7 @@ jobs:
             docker run --rm \
               -v /opt/dobalito/backend/src/main/resources/db/migration:/flyway/sql \
               flyway/flyway:9-alpine \
-              -url=jdbc:postgresql://localhost:5432/dobalito \
+              -url=jdbc:postgresql://${{ secrets.SERVER_HOST }}:5432/dobalito \
               -user=postgres \
               -password="${{ secrets.POSTGRES_PASSWORD }}" \
               repair
