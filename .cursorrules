@@ -223,6 +223,48 @@ When creating Docker configurations:
 - ALWAYS verify service availability after background start
 - Use Docker as preferred development environment when possible
 
+## 🔧 Local Backend Logging Rules
+**ALWAYS run local backend with logs for debugging**
+
+### CRITICAL: Backend logging requirements:
+- ✅ **MANDATORY**: Use `is_background: false` for local backend startup
+- ✅ **MANDATORY**: Show full Spring Boot logs for error diagnosis
+- ✅ **MANDATORY**: Display Flyway migration logs
+- ✅ **MANDATORY**: Show JPA/Hibernate startup logs
+- ✅ **MANDATORY**: Display database connection logs
+- ❌ **NEVER** use `is_background: true` for local backend startup
+- ❌ **NEVER** hide backend startup logs
+
+### Why backend logs are critical:
+- ✅ **Flyway errors**: Migration conflicts visible only in logs
+- ✅ **JPA errors**: EntityManager issues visible only in logs  
+- ✅ **Database errors**: Connection problems visible only in logs
+- ✅ **Port conflicts**: Port binding errors visible only in logs
+- ✅ **Dependency errors**: Bean creation failures visible only in logs
+
+### Correct backend startup pattern:
+```bash
+# ✅ CORRECT - Always show logs for backend
+run_terminal_cmd
+  command: cd backend; $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/dobalito"; $env:SPRING_DATASOURCE_USERNAME="postgres"; $env:SPRING_DATASOURCE_PASSWORD="root"; mvn spring-boot:run
+  is_background: false  # ← ALWAYS false for backend!
+```
+
+### Exception: Frontend can run in background:
+```bash
+# ✅ OK - Frontend can run in background
+run_terminal_cmd
+  command: cd frontend-react; npm start
+  is_background: true  # ← OK for frontend
+```
+
+### Enforcement:
+- ALWAYS use `is_background: false` for local backend startup
+- ALWAYS analyze backend logs for errors before proceeding
+- ALWAYS fix backend errors before switching to background mode
+- NEVER hide backend startup logs
+- ALWAYS show full Spring Boot startup sequence
+
 ## 🌍 Internationalization Rules
 **ALWAYS update translations for both languages when modifying frontend elements**
 
