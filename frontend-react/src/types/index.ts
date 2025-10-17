@@ -5,6 +5,7 @@ export interface User {
   email: string;
   avatar: string;
   memberSince: string;
+  categories?: Category[];
 }
 
 export interface AppInfo {

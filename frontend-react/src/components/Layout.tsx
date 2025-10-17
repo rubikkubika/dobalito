@@ -1,17 +1,16 @@
 // Layout component with Airbnb-style navigation
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AppBar,
   Toolbar,
   Typography,
   IconButton,
   Box,
-  TextField,
-  InputAdornment,
   Button,
+  Badge,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DobalitoLogo from './DobalitoLogo';
@@ -30,7 +29,6 @@ const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
   const location = useLocation();
   const { t, language } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLoginClick = () => {
     navigate('/login');
@@ -40,21 +38,12 @@ const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
     logout();
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (searchQuery.trim()) {
-      // Handle search logic here
-      console.log('Searching for:', searchQuery);
-      // You can navigate to search results or implement search functionality
-    }
-  };
-
   const handleLogoClick = () => {
     navigate('/');
+  };
+
+  const handleNotificationsClick = () => {
+    navigate('/notifications');
   };
 
 
@@ -132,65 +121,6 @@ const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
               </Typography>
             </Box>
 
-            {/* Center - Search Bar */}
-            <Box sx={{ 
-              flexGrow: 1, 
-              order: { xs: 3, sm: 2 },
-              width: '100%',
-              minWidth: 0
-            }}>
-              <form onSubmit={handleSearchSubmit}>
-                <TextField
-                  fullWidth
-                  placeholder="Поиск заданий, исполнителей..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: '#F5F5F5',
-                      borderRadius: '25px',
-                      height: '48px',
-                      '& fieldset': {
-                        border: '2px solid #E0E0E0',
-                      },
-                      '&:hover fieldset': {
-                        border: '2px solid #BDBDBD',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: '2px solid #4CAF50',
-                      },
-                    },
-                    '& .MuiInputBase-input': {
-                      padding: '12px 16px',
-                      fontSize: '16px',
-                    },
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Button
-                          type="submit"
-                          sx={{
-                            backgroundColor: '#4CAF50',
-                            color: '#FFFFFF',
-                            borderRadius: '50%',
-                            minWidth: '40px',
-                            height: '40px',
-                            width: '40px',
-                            '&:hover': {
-                              backgroundColor: '#388E3C',
-                            },
-                          }}
-                        >
-                          <SearchIcon sx={{ fontSize: 20 }} />
-                        </Button>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </form>
-            </Box>
-
             {/* Right side - Actions */}
             <Box sx={{ 
               display: 'flex', 
@@ -228,6 +158,21 @@ const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
                 </Button>
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {/* Notifications Bell */}
+                  <IconButton
+                    sx={{
+                      color: '#757575',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                    }}
+                    onClick={handleNotificationsClick}
+                  >
+                    <Badge badgeContent={3} color="error">
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+                  
                   <Typography 
                     variant="body2" 
                     sx={{ 
@@ -261,30 +206,10 @@ const Layout: React.FC<LayoutProps> = ({ children, hideSidebar = false }) => {
                       },
                     }}
                   >
-                    Выйти
+                    {t('nav.logout')}
                   </Button>
                 </Box>
               )}
-
-              {/* For Executors Button */}
-              <Button
-                variant="contained"
-                sx={{
-                  borderRadius: '20px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: { xs: '12px', sm: '14px' },
-                  px: { xs: 1.5, sm: 2 },
-                  py: 0.5,
-                  backgroundColor: '#000000',
-                  color: '#FFFFFF',
-                  '&:hover': {
-                    backgroundColor: '#333333',
-                  },
-                }}
-              >
-                {t('nav.for_executors')}
-              </Button>
             </Box>
           </Box>
         </Toolbar>

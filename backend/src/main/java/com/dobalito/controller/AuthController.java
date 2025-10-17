@@ -20,6 +20,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -307,15 +308,34 @@ public class AuthController {
                 ));
             }
             
+            // Подготавливаем данные пользователя с категориями
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", user.getId());
+            userData.put("name", user.getName());
+            userData.put("phone", user.getPhone());
+            userData.put("email", user.getEmail());
+            userData.put("avatar", user.getAvatar() != null ? user.getAvatar() : "");
+            
+            // Добавляем категории пользователя
+            if (user.getCategories() != null && !user.getCategories().isEmpty()) {
+                List<Map<String, Object>> categoriesData = user.getCategories().stream()
+                    .map(category -> Map.of(
+                        "id", (Object) category.getId(),
+                        "name", category.getName(),
+                        "englishName", category.getEnglishName() != null ? category.getEnglishName() : "",
+                        "description", category.getDescription() != null ? category.getDescription() : "",
+                        "icon", category.getIcon() != null ? category.getIcon() : "",
+                        "color", category.getColor() != null ? category.getColor() : "#4CAF50"
+                    ))
+                    .collect(java.util.stream.Collectors.toList());
+                userData.put("categories", categoriesData);
+            } else {
+                userData.put("categories", List.of());
+            }
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("user", Map.of(
-                "id", user.getId(),
-                "name", user.getName(),
-                "phone", user.getPhone(),
-                "email", user.getEmail(),
-                "avatar", user.getAvatar() != null ? user.getAvatar() : ""
-            ));
+            response.put("user", userData);
             
             return ResponseEntity.ok(response);
             

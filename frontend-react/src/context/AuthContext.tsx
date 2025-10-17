@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             email: response.user.email,
             phone: response.user.phone || undefined,
             avatar: response.user.avatar || undefined,
-            categories: []
+            categories: response.user.categories || []
           };
           setUser(userData);
         }

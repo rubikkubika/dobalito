@@ -23,6 +23,8 @@ const translations = {
     'nav.login_register': 'Вход/Регистрация',
     'nav.for_executors': 'Для исполнителей',
     'nav.search': 'Поиск',
+    'nav.logout': 'Выйти',
+    'nav.my_categories': 'Мои категории',
     
     // Home page
     'home.welcome': 'Добро пожаловать в doBalito',
@@ -80,6 +82,13 @@ const translations = {
     'executors.title': 'Исполнители в категории',
     'executors.back': 'Назад',
     'executors.empty': 'Список исполнителей пуст',
+    'executor.executions': 'Исполнения',
+    'executor.select_category': 'Выберите категорию',
+    'executor.available_tasks': 'Доступные задания',
+    'executor.no_categories': 'У вас нет категорий для исполнения заданий',
+    'executor.no_tasks': 'Нет доступных заданий в категории',
+    'executor.customer': 'Заказчик',
+    'executor.respond': 'Откликнуться',
     'executors.empty_desc': 'В данной категории пока нет исполнителей',
     
     
@@ -105,6 +114,23 @@ const translations = {
       'phone.name_optional': 'Только для новых пользователей',
       'phone.name_required': 'Имя обязательно для новых пользователей',
     
+    // Notifications
+    'notifications.title': 'Уведомления',
+    'notifications.empty': 'Нет уведомлений',
+    'notifications.mark_all_read': 'Отметить все как прочитанные',
+    'notifications.mark_read': 'Отметить как прочитанное',
+    'notifications.new_task': 'Новое задание',
+    'notifications.task_assigned': 'Задание назначено',
+    'notifications.task_completed': 'Задание завершено',
+    'notifications.task_cancelled': 'Задание отменено',
+    'notifications.executor_responded': 'Исполнитель откликнулся',
+    'notifications.payment_received': 'Платеж получен',
+    'notifications.rating_received': 'Получен рейтинг',
+    'notifications.time_ago': 'назад',
+    'notifications.minutes': 'мин',
+    'notifications.hours': 'ч',
+    'notifications.days': 'дн',
+    
     // Language selector
     'lang.russian': 'Русский',
     'lang.english': 'English',
@@ -120,6 +146,8 @@ const translations = {
     'nav.login_register': 'Login/Register',
     'nav.for_executors': 'For Executors',
     'nav.search': 'Search',
+    'nav.logout': 'Logout',
+    'nav.my_categories': 'My Categories',
     
     // Home page
     'home.welcome': 'Welcome to doBalito',
@@ -177,6 +205,13 @@ const translations = {
     'executors.title': 'Executors in category',
     'executors.back': 'Back',
     'executors.empty': 'Executors list is empty',
+    'executor.executions': 'Executions',
+    'executor.select_category': 'Select category',
+    'executor.available_tasks': 'Available tasks',
+    'executor.no_categories': 'You have no categories for task execution',
+    'executor.no_tasks': 'No available tasks in category',
+    'executor.customer': 'Customer',
+    'executor.respond': 'Respond',
     'executors.empty_desc': 'There are no executors in this category yet',
     
     
@@ -201,6 +236,23 @@ const translations = {
     'phone.phone_number': 'Phone number',
       'phone.name_optional': 'For new users only',
       'phone.name_required': 'Name is required for new users',
+    
+    // Notifications
+    'notifications.title': 'Notifications',
+    'notifications.empty': 'No notifications',
+    'notifications.mark_all_read': 'Mark all as read',
+    'notifications.mark_read': 'Mark as read',
+    'notifications.new_task': 'New task',
+    'notifications.task_assigned': 'Task assigned',
+    'notifications.task_completed': 'Task completed',
+    'notifications.task_cancelled': 'Task cancelled',
+    'notifications.executor_responded': 'Executor responded',
+    'notifications.payment_received': 'Payment received',
+    'notifications.rating_received': 'Rating received',
+    'notifications.time_ago': 'ago',
+    'notifications.minutes': 'min',
+    'notifications.hours': 'h',
+    'notifications.days': 'd',
     
     // Language selector
     'lang.russian': 'Русский',
@@ -281,6 +333,23 @@ const translations = {
     'phone.error': 'Error autentikasi telepon',
     'phone.switch_to_email': 'Masuk dengan email',
     'phone.switch_to_phone': 'Masuk dengan telepon',
+    
+    // Notifications
+    'notifications.title': 'Notifikasi',
+    'notifications.empty': 'Tidak ada notifikasi',
+    'notifications.mark_all_read': 'Tandai semua sebagai dibaca',
+    'notifications.mark_read': 'Tandai sebagai dibaca',
+    'notifications.new_task': 'Tugas baru',
+    'notifications.task_assigned': 'Tugas ditugaskan',
+    'notifications.task_completed': 'Tugas selesai',
+    'notifications.task_cancelled': 'Tugas dibatalkan',
+    'notifications.executor_responded': 'Eksekutor merespons',
+    'notifications.payment_received': 'Pembayaran diterima',
+    'notifications.rating_received': 'Rating diterima',
+    'notifications.time_ago': 'lalu',
+    'notifications.minutes': 'mnt',
+    'notifications.hours': 'j',
+    'notifications.days': 'h',
     
     // Language selector
     'lang.russian': 'Русский',

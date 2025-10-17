@@ -21,15 +21,14 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
 import { Task, Category } from '../types';
-import CategoryList from '../components/CategoryList';
-import MyTasksSection from '../components/MyTasksSection';
+import Sidebar from '../components/Sidebar';
 import { useCategories } from '../hooks/useCategories';
 
 type TaskFilterType = 'open' | 'closed' | 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 const TasksPage: React.FC = () => {
   const { t, language } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const taskType = (searchParams.get('type') || 'open') as TaskFilterType;
@@ -145,57 +144,42 @@ const TasksPage: React.FC = () => {
           width: { md: 'auto' },
           display: { xs: 'none', md: 'block' }
         }}>
-          {/* My Tasks Section - Only for authenticated users */}
+          {/* Create Task Button */}
           {isAuthenticated && (
-            <Box sx={{ mb: 2 }}>
-              {/* Create Task Button */}
-              <Button
-                variant="contained"
-                onClick={handleCreateTaskClick}
-                startIcon={<WorkIcon />}
-                sx={{
-                  width: '100%',
-                  mb: 2,
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  py: 1.5,
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  '&:hover': {
-                    backgroundColor: '#1976D2',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 8px rgba(33, 150, 243, 0.3)',
-                  },
-                  transition: 'all 0.2s ease-in-out',
-                }}
-              >
-                {t('home.create_task')}
-              </Button>
-              
-              <MyTasksSection 
-                onTaskTypeClick={handleStatusClick}
-                activeTaskType={taskType}
-              />
-            </Box>
+            <Button
+              variant="contained"
+              onClick={handleCreateTaskClick}
+              startIcon={<WorkIcon />}
+              sx={{
+                width: '100%',
+                mb: 2,
+                backgroundColor: '#2196F3',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                py: 1.5,
+                borderRadius: '8px',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#1976D2',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 8px rgba(33, 150, 243, 0.3)',
+                },
+                transition: 'all 0.2s ease-in-out',
+              }}
+            >
+              {t('home.create_task')}
+            </Button>
           )}
           
-          {/* Categories Sidebar */}
-          <Box sx={{ 
-            backgroundColor: '#FFFFFF', 
-            borderRadius: '16px', 
-            border: '1px solid #E0E0E0',
-            p: 2
-          }}>
-            <CategoryList
-              categories={categories}
-              loading={categoriesLoading}
-              error={categoriesError}
-              onCategoryClick={handleCategoryClick}
-              title={t('home.categories')}
-            />
-          </Box>
+          {/* Unified Sidebar */}
+          <Sidebar
+            userCategories={user?.categories}
+            allCategories={categories}
+            onMyTasksClick={() => navigate('/tasks')}
+            onExecutionsClick={() => navigate('/executions')}
+            onCategoryClick={handleCategoryClick}
+          />
         </Box>
 
         {/* Main Content */}

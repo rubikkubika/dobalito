@@ -20,9 +20,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
 import FeatureCard from '../components/FeatureCard';
-import CategoryList from '../components/CategoryList';
-import CommitInfo from '../components/CommitInfo';
-import MyTasksSection from '../components/MyTasksSection';
+import VersionInfo from '../components/VersionInfo';
+import Sidebar from '../components/Sidebar';
 import { getResponsiveValue } from '../utils/helpers';
 import { Category } from '../types';
 import { useCategories } from '../hooks/useCategories';
@@ -32,7 +31,7 @@ const HomePage: React.FC = () => {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // Мемоизируем язык для бэкенда, чтобы избежать лишних перерендеров
   const backendLanguage = React.useMemo(() => {
@@ -127,54 +126,42 @@ const HomePage: React.FC = () => {
           width: { md: 'auto' },
           display: { xs: 'none', md: 'block' }
         }}>
-          {/* My Tasks Section - Only for authenticated users */}
+          {/* Create Task Button */}
           {isAuthenticated && (
-            <Box sx={{ mb: 2 }}>
-              {/* Create Task Button */}
-              <Button
-                variant="contained"
-                onClick={handleCreateTaskClick}
-                startIcon={<WorkIcon />}
-                sx={{
-                  width: '100%',
-                  mb: 2,
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  py: 1.5,
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  '&:hover': {
-                    backgroundColor: '#1976D2',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 8px rgba(33, 150, 243, 0.3)',
-                  },
-                  transition: 'all 0.2s ease-in-out',
-                }}
-              >
-                {t('home.create_task')}
-              </Button>
-              
-              <MyTasksSection onTaskTypeClick={handleTaskTypeClick} />
-            </Box>
+            <Button
+              variant="contained"
+              onClick={handleCreateTaskClick}
+              startIcon={<WorkIcon />}
+              sx={{
+                width: '100%',
+                mb: 2,
+                backgroundColor: '#2196F3',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                py: 1.5,
+                borderRadius: '8px',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#1976D2',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 8px rgba(33, 150, 243, 0.3)',
+                },
+                transition: 'all 0.2s ease-in-out',
+              }}
+            >
+              {t('home.create_task')}
+            </Button>
           )}
           
-          {/* Categories Sidebar */}
-          <Box sx={{ 
-            backgroundColor: '#FFFFFF', 
-            borderRadius: '16px', 
-            border: '1px solid #E0E0E0',
-            p: 2
-          }}>
-            <CategoryList
-              categories={categories}
-              loading={categoriesLoading}
-              error={categoriesError}
-              onCategoryClick={handleCategoryClick}
-              title={t('home.categories')}
-            />
-          </Box>
+          {/* Unified Sidebar */}
+          <Sidebar
+            userCategories={user?.categories}
+            allCategories={categories}
+            onMyTasksClick={handleTaskTypeClick.bind(null, 'open')}
+            onExecutionsClick={() => navigate('/executions')}
+            onCategoryClick={handleCategoryClick}
+          />
         </Box>
 
         {/* Main Content */}
@@ -252,7 +239,7 @@ const HomePage: React.FC = () => {
       </Box>
 
       {/* Commit Info */}
-      <CommitInfo />
+      <VersionInfo />
     </Container>
   );
 };

@@ -242,8 +242,19 @@ export const apiService = {
 
   // Commit info
   async getCommitInfo() {
-    const response = await api.get('/info/commit');
-    return response.data;
+    try {
+      const response = await api.get('/info/commit');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error: any) {
+      console.error('Error fetching commit info:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch commit info'
+      };
+    }
   },
 
   // Task management
@@ -316,6 +327,24 @@ export const apiService = {
   async getTaskStats() {
     const response = await api.get('/tasks/stats');
     return response.data;
+  },
+
+  async getTasksByCategory(categoryId: number) {
+    try {
+      const response = await api.get(`/tasks/category/${categoryId}`);
+      return {
+        success: true,
+        tasks: response.data.tasks || [],
+        count: response.data.count || 0
+      };
+    } catch (error: any) {
+      console.error('Error fetching tasks by category:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch tasks',
+        tasks: []
+      };
+    }
   },
 };
 

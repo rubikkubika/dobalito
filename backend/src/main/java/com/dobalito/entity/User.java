@@ -38,7 +38,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_categories",
         joinColumns = @JoinColumn(name = "user_id"),

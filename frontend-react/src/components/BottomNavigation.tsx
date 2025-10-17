@@ -1,18 +1,22 @@
 import React from 'react';
 import { BottomNavigation as MuiBottomNavigation, BottomNavigationAction, Box } from '@mui/material';
-import { Home, Search, Person, Assignment } from '@mui/icons-material';
+import { Home, Person, Assignment, Work } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  
+  const hasCategories = user?.categories && user.categories.length > 0;
 
   const getCurrentValue = () => {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 0;
-    if (path.startsWith('/search')) return 1;
+    if (hasCategories && path.startsWith('/executions')) return 1;
     if (path.startsWith('/tasks')) return 2;
     if (path.startsWith('/profile')) return 3;
     return 0;
@@ -24,7 +28,9 @@ const BottomNavigation: React.FC = () => {
         navigate('/');
         break;
       case 1:
-        navigate('/search');
+        if (hasCategories) {
+          navigate('/executions');
+        }
         break;
       case 2:
         navigate('/tasks');
@@ -66,10 +72,12 @@ const BottomNavigation: React.FC = () => {
           label={t('nav.home')}
           icon={<Home />}
         />
-        <BottomNavigationAction
-          label={t('nav.search')}
-          icon={<Search />}
-        />
+        {hasCategories && (
+          <BottomNavigationAction
+            label={t('executor.executions')}
+            icon={<Work />}
+          />
+        )}
         <BottomNavigationAction
           label={t('nav.tasks')}
           icon={<Assignment />}

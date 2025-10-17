@@ -42,16 +42,15 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
     >
       <CardContent sx={{ 
         flexGrow: 1, 
-        padding: '5px !important',
+        padding: '0 !important',
         '&.MuiCardContent-root': {
-          padding: '5px !important'
+          padding: '0 !important'
         }
       }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'flex-start',
-            mb: getResponsiveValue(1.5, 2, 2.5),
           }}
         >
           <Box
@@ -63,7 +62,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              mr: getResponsiveValue(1.5, 2, 2.5),
               flexShrink: 0,
             }}
           >
@@ -79,7 +77,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
                 fontSize: getResponsiveValue('1rem', '1.1rem', '1.2rem'),
                 fontWeight: 600,
                 color: '#000000',
-                mb: 0.5,
               }}
             >
               {title}

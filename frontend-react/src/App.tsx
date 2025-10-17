@@ -15,6 +15,8 @@ import SearchPage from './pages/SearchPage';
 import LoginPage from './pages/LoginPage';
 import CreateTaskPage from './pages/CreateTaskPage';
 import TasksPage from './pages/TasksPage';
+import ExecutionsPage from './pages/ExecutionsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Create theme with green colors matching doBalito design
@@ -154,6 +156,16 @@ function App() {
             <Route path="/tasks" element={
               <ProtectedRoute>
                 <TasksPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/executions" element={
+              <ProtectedRoute>
+                <ExecutionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <NotificationsPage />
               </ProtectedRoute>
             } />
                 </Routes>

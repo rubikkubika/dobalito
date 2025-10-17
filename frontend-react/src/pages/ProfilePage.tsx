@@ -154,7 +154,8 @@ const ProfilePage: React.FC = () => {
           borderRadius: '16px', 
           border: '1px solid #E0E0E0',
           p: 2,
-          order: { xs: 2, md: 1 }
+          order: { xs: 2, md: 1 },
+          display: { xs: 'none', md: 'block' }
         }}>
           <CategoryList
             categories={categories}
@@ -325,11 +326,11 @@ const ProfilePage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Категории пользователя */}
+        {/* Категории пользователя - скрыто на мобильных */}
         {user.categories && user.categories.length > 0 && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, display: { xs: 'none', sm: 'block' } }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Мои категории
+              {t('nav.my_categories')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {user.categories.map((category) => (
